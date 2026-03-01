@@ -29,6 +29,7 @@ export function AdminSidebar() {
     pathname === "/admin/products" ||
     pathname.startsWith("/admin/products/new") ||
     /^\/admin\/products\/\d+\/edit$/.test(pathname);
+  const isCategories = pathname === "/admin/categories";
 
   const handleLogout = async () => {
     try {
@@ -46,6 +47,7 @@ export function AdminSidebar() {
       <nav className="p-4 space-y-1 flex-1">
         {navLink("/admin", "Dashboard", isDashboard)}
         {navLink("/admin/products", "Products", isProducts)}
+        {navLink("/admin/categories", "Categories", isCategories)}
         {/* Placeholders for future: Orders, Users (admin-high-level-design.md §3) */}
         <span className="block px-3 py-2 text-gray-400 dark:text-gray-500 text-sm">
           Orders (later)

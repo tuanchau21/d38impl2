@@ -111,6 +111,28 @@ export async function getCategories(signal?: AbortSignal): Promise<Category[]> {
   }
 }
 
+/** Admin list categories (GET /api/admin/categories). Same shape as public; protected by admin auth. */
+export async function getAdminCategories(
+  options: { signal?: AbortSignal; adminKey?: string } = {}
+): Promise<Category[]> {
+  const url = `${BASE}/api/admin/categories`;
+  const headers: HeadersInit = {};
+  if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
+  try {
+    return await fetchJson<Category[]>(
+      url,
+      { headers, ...ADMIN_CREDENTIALS },
+      options.signal
+    );
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("getAdminCategories", { url });
+      throw err;
+    }
+    throw err;
+  }
+}
+
 export async function createCategory(
   body: { name: string; slug?: string; parent_id?: number | null },
   options: { signal?: AbortSignal; adminKey?: string } = {}
@@ -127,6 +149,42 @@ export async function createCategory(
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       logCancel("createCategory", { url });
+      throw err;
+    }
+    throw err;
+  }
+}
+
+/** Delete category (DELETE /api/admin/categories/:id). Throws with message on 409 (in use). */
+export async function deleteCategory(
+  id: number,
+  options: { signal?: AbortSignal; adminKey?: string } = {}
+): Promise<void> {
+  const url = `${BASE}/api/admin/categories/${id}`;
+  const headers: HeadersInit = {};
+  if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
+  try {
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers,
+      ...ADMIN_CREDENTIALS,
+      signal: options.signal,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      let msg = text;
+      try {
+        const j = JSON.parse(text) as { error?: string };
+        if (j.error) msg = j.error;
+      } catch {
+        // ignore
+      }
+      logError("deleteCategory failed", new Error(msg), { url, status: res.status });
+      throw new Error(msg || `Delete failed: ${res.status}`);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("deleteCategory", { url });
       throw err;
     }
     throw err;

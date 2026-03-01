@@ -72,6 +72,15 @@ export async function createCategory(data: CreateCategoryData): Promise<Category
   return rowToCategory(row);
 }
 
+export async function getCategoryById(id: number): Promise<Category | null> {
+  const rows = await query<CategoryRow[]>(
+    "SELECT id, name, slug, parent_id FROM categories WHERE id = ? LIMIT 1",
+    [id]
+  );
+  const row = rows[0];
+  return row ? rowToCategory(row) : null;
+}
+
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   const rows = await query<CategoryRow[]>(
     "SELECT id, name, slug, parent_id FROM categories WHERE slug = ? LIMIT 1",
@@ -79,4 +88,19 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   );
   const row = rows[0];
   return row ? rowToCategory(row) : null;
+}
+
+/** Count products that reference this category (admin-high-level-design §7: delete allowed only if 0). */
+export async function countProductsByCategoryId(categoryId: number): Promise<number> {
+  const result = await query<{ count: number }[]>(
+    "SELECT COUNT(*) AS count FROM products WHERE category_id = ?",
+    [categoryId]
+  );
+  return Number(result[0]?.count ?? 0);
+}
+
+export async function deleteCategory(id: number): Promise<boolean> {
+  const result = await query<{ affectedRows: number }>("DELETE FROM categories WHERE id = ?", [id]);
+  const affected = (result as unknown as { affectedRows: number }).affectedRows;
+  return Number(affected) > 0;
 }

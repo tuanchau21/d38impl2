@@ -1,14 +1,28 @@
 /**
- * POST /api/admin/categories — create category (admin-high-level-design §6.2.1, backend-technical-design §5).
- * Used when adding a product and the desired category does not exist.
+ * GET /api/admin/categories — list categories (admin-high-level-design §7).
+ * POST /api/admin/categories — create category (§6.5.2, §7).
  */
 
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { createCategory } from "@/lib/db/categories";
+import { createCategory, listCategories } from "@/lib/db/categories";
 
 function logError(context: string, err: unknown): void {
   console.error(`[api/admin/categories] ${context}`, { error: err });
+}
+
+export async function GET(request: Request) {
+  const auth = await requireAdmin(request);
+  if (!auth.ok) {
+    return NextResponse.json(auth.body, { status: auth.status });
+  }
+  try {
+    const categories = await listCategories();
+    return NextResponse.json(categories);
+  } catch (err) {
+    logError("GET list failed", err);
+    return NextResponse.json({ error: "Failed to list categories" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
