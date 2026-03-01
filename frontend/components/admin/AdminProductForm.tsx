@@ -17,6 +17,27 @@ function logError(context: string, err: unknown): void {
   console.error(`[admin-product-form] ${context}`, { error: err });
 }
 
+/** Restrict to digits and one decimal separator (. or ,), max 2 digits after. */
+function formatPriceInput(value: string): string {
+  let s = value.replace(/[^\d.,]/g, "");
+  const sepIdx = s.search(/[.,]/);
+  if (sepIdx === -1) {
+    return s.replace(/[.,]/g, "");
+  }
+  const sep = s[sepIdx];
+  const before = s.slice(0, sepIdx).replace(/[.,]/g, "");
+  const after = s.slice(sepIdx + 1).replace(/\D/g, "").slice(0, 2);
+  return before + sep + after;
+}
+
+/** Convert price string (with . or ,) to number for API, max 2 decimals. */
+function priceStringToNumber(s: string): number {
+  const normalized = s.trim().replace(",", ".");
+  const num = parseFloat(normalized);
+  if (Number.isNaN(num) || num < 0) return 0;
+  return Math.round(num * 100) / 100;
+}
+
 interface AdminProductFormProps {
   product?: Product;
 }
@@ -75,20 +96,6 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    // #region agent log
-    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceaeb5" },
-      body: JSON.stringify({
-        sessionId: "ceaeb5",
-        location: "AdminProductForm.tsx:handleAddCategory.entry",
-        message: "addCategory.entry",
-        data: { newCategoryNameTrimmed: newCategoryName.trim() },
-        timestamp: Date.now(),
-        hypothesisId: "addCategory_entered",
-      }),
-    }).catch(() => {});
-    // #endregion
     const name = newCategoryName.trim();
     if (!name) {
       setAddCategoryError("Name is required");
@@ -98,39 +105,11 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
     setAddCategoryLoading(true);
     try {
       const created = await createCategory({ name });
-      // #region agent log
-      fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceaeb5" },
-        body: JSON.stringify({
-          sessionId: "ceaeb5",
-          location: "AdminProductForm.tsx:handleAddCategory.success",
-          message: "addCategory.success",
-          data: { createdId: created.id },
-          timestamp: Date.now(),
-          hypothesisId: "addCategory_success",
-        }),
-      }).catch(() => {});
-      // #endregion
       loadCategories();
       setCategoryId(created.id);
       setNewCategoryName("");
       setShowAddCategory(false);
     } catch (err) {
-      // #region agent log
-      fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceaeb5" },
-        body: JSON.stringify({
-          sessionId: "ceaeb5",
-          location: "AdminProductForm.tsx:handleAddCategory.catch",
-          message: "addCategory.error",
-          data: { errMessage: err instanceof Error ? err.message : String(err) },
-          timestamp: Date.now(),
-          hypothesisId: "addCategory_error",
-        }),
-      }).catch(() => {});
-      // #endregion
       logError("create category", err);
       setAddCategoryError(err instanceof Error ? err.message : "Failed to create category");
     } finally {
@@ -140,20 +119,6 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // #region agent log
-    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceaeb5" },
-      body: JSON.stringify({
-        sessionId: "ceaeb5",
-        location: "AdminProductForm.tsx:handleSubmit.entry",
-        message: "productSubmit.entry",
-        data: { isEdit },
-        timestamp: Date.now(),
-        hypothesisId: "productSubmit_entered",
-      }),
-    }).catch(() => {});
-    // #endregion
     setError(null);
     setLoading(true);
     try {
@@ -162,7 +127,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
         sku,
         category_id: categoryId === "" ? null : (categoryId as number),
         description: description || undefined,
-        price: parseFloat(price) || 0,
+        price: priceStringToNumber(price),
         discount_percent: parseFloat(discountPercent) || 0,
         quantity_per_box: parseInt(quantityPerBox, 10) || 1,
         is_promoted: isPromoted,
@@ -323,12 +288,12 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
           </label>
           <input
             id="price"
-            type="number"
-            min="0"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             required
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
+            onChange={(e) => setPrice(formatPriceInput(e.target.value))}
+            placeholder="0.00"
             className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
           />
         </div>

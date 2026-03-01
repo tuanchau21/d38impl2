@@ -51,6 +51,10 @@ export async function POST(request: Request) {
     if (quantity_per_box == null || !Number.isInteger(quantity_per_box) || quantity_per_box < 1) {
       return NextResponse.json({ error: "quantity_per_box must be a positive integer" }, { status: 400 });
     }
+    const slug = name.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    if (!slug) {
+      return NextResponse.json({ error: "name must contain at least one letter or number" }, { status: 400 });
+    }
     const product = await createProduct({
       name: name.trim(),
       sku: sku.trim(),
@@ -64,6 +68,16 @@ export async function POST(request: Request) {
     return NextResponse.json(product, { status: 201 });
   } catch (err) {
     logError("POST create failed", err);
+    const mysqlErr = err as { code?: string; sqlMessage?: string };
+    if (mysqlErr.code === "ER_DUP_ENTRY") {
+      const msg =
+        mysqlErr.sqlMessage?.includes("uq_products_sku") || mysqlErr.sqlMessage?.includes("sku")
+          ? "A product with this SKU already exists"
+          : mysqlErr.sqlMessage?.includes("uq_products_slug") || mysqlErr.sqlMessage?.includes("slug")
+            ? "A product with this name already exists (slug conflict)"
+            : "A product with this SKU or name already exists";
+      return NextResponse.json({ error: msg }, { status: 409 });
+    }
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
   }
 }
