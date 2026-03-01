@@ -1,4 +1,4 @@
--- Admin users table and sessions FK (admin-login-design.md §6).
+-- Admin users table and sessions FK (admin-high-level-design.md §5.6).
 -- Apply when users has no password_hash (placeholder only) and admin login uses admin_users.
 -- Run after schema.sql or after 001; fixes "Unknown column 'password_hash'" by using admin_users.
 

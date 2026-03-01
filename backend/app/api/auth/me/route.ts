@@ -1,5 +1,5 @@
 /**
- * GET /api/auth/me — current admin user (admin-login-design.md §3).
+ * GET /api/auth/me — current admin user (admin-high-level-design.md §5.3).
  * Credentials via session cookie or Authorization. 401 if not authenticated.
  */
 

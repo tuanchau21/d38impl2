@@ -1,5 +1,5 @@
 /**
- * POST /api/auth/login — admin login (admin-login-design.md §3).
+ * POST /api/auth/login — admin login (admin-high-level-design.md §5.3).
  * Body: { email, password }. Success: set session cookie, return { user }.
  */
 

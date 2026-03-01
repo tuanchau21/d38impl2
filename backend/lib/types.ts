@@ -43,7 +43,7 @@ export interface ApiError {
   error: string;
 }
 
-/** Admin user (admin-login-design.md). No password in API responses. */
+/** Admin user (admin-high-level-design.md §5). No password in API responses. */
 export interface AdminUser {
   id: number;
   email: string;

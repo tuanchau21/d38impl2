@@ -29,6 +29,8 @@ export interface ProductRow {
   is_promoted: number;
   created_at: Date;
   updated_at: Date;
+  category_name?: string | null;
+  category_slug?: string | null;
 }
 
 export interface ProductImageRow {
@@ -39,7 +41,7 @@ export interface ProductImageRow {
 }
 
 function rowToProduct(row: ProductRow, images?: ProductImageRow[]): Product {
-  return {
+  const product: Product = {
     id: row.id,
     category_id: row.category_id ?? 0,
     sku: row.sku,
@@ -54,6 +56,15 @@ function rowToProduct(row: ProductRow, images?: ProductImageRow[]): Product {
     updated_at: String(row.updated_at),
     images: images?.map((i) => ({ id: i.id, product_id: i.product_id, url: i.url, sort_order: i.sort_order })),
   };
+  if (row.category_id != null && row.category_name != null) {
+    product.category = {
+      id: row.category_id,
+      name: row.category_name,
+      slug: row.category_slug ?? "",
+      parent_id: null,
+    };
+  }
+  return product;
 }
 
 export async function listProducts(params: ListProductsParams): Promise<{ products: Product[]; total: number; hasMore: boolean }> {
@@ -89,8 +100,11 @@ export async function listProducts(params: ListProductsParams): Promise<{ produc
   const total = Number(countResult[0]?.total ?? 0);
 
   const sql = `
-    SELECT p.id, p.category_id, p.sku, p.name, p.slug, p.description, p.price, p.discount_percent, p.quantity_per_box, p.is_promoted, p.created_at, p.updated_at
-    FROM products p ${where}
+    SELECT p.id, p.category_id, p.sku, p.name, p.slug, p.description, p.price, p.discount_percent, p.quantity_per_box, p.is_promoted, p.created_at, p.updated_at,
+           c.name AS category_name, c.slug AS category_slug
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    ${where}
     ORDER BY p.updated_at DESC
     LIMIT ? OFFSET ?
   `;
@@ -254,4 +268,10 @@ export async function addProductImages(productId: number, imageUrls: { url: stri
 export async function getProductImages(productId: number): Promise<ProductImage[]> {
   const rows = await query<ProductImageRow[]>("SELECT id, product_id, url, sort_order FROM product_images WHERE product_id = ? ORDER BY sort_order", [productId]);
   return rows.map((r) => ({ id: r.id, product_id: r.product_id, url: r.url, sort_order: r.sort_order }));
+}
+
+export async function deleteProductImage(productId: number, imageId: number): Promise<boolean> {
+  const result = await query<{ affectedRows: number }>("DELETE FROM product_images WHERE product_id = ? AND id = ?", [productId, imageId]);
+  const affected = (result as unknown as { affectedRows: number }).affectedRows;
+  return affected > 0;
 }

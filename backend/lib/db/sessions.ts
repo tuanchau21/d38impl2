@@ -1,5 +1,5 @@
 /**
- * Server-side sessions (admin-login-design.md §6). Sessions table.
+ * Server-side sessions (admin-high-level-design.md §5.6). Sessions table.
  */
 
 import { query } from "./client";

@@ -38,11 +38,11 @@ export function AdminProductList() {
     load();
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Delete this product?")) return;
+  const handleDelete = async (p: Product) => {
+    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
     try {
-      await deleteProduct(id, { adminKey: adminKey || undefined });
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+      await deleteProduct(p.id, { adminKey: adminKey || undefined });
+      setProducts((prev) => prev.filter((x) => x.id !== p.id));
     } catch (err) {
       logError("delete product", err);
       setError(err instanceof Error ? err.message : "Delete failed");
@@ -79,9 +79,12 @@ export function AdminProductList() {
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
+                <th className="px-4 py-2 font-medium w-16">Thumb</th>
                 <th className="px-4 py-2 font-medium">Name</th>
                 <th className="px-4 py-2 font-medium">SKU</th>
+                <th className="px-4 py-2 font-medium">Category</th>
                 <th className="px-4 py-2 font-medium">Price</th>
+                <th className="px-4 py-2 font-medium">Discount</th>
                 <th className="px-4 py-2 font-medium">Per box</th>
                 <th className="px-4 py-2 font-medium">Promoted</th>
                 <th className="px-4 py-2 font-medium">Actions</th>
@@ -90,9 +93,25 @@ export function AdminProductList() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {products.map((p) => (
                 <tr key={p.id}>
+                  <td className="px-4 py-2">
+                    {p.images?.length ? (
+                      <img
+                        src={p.images[0]!.url}
+                        alt=""
+                        className="w-12 h-12 object-cover rounded"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="inline-block w-12 h-12 rounded bg-gray-200 dark:bg-gray-700 text-gray-400 text-xs flex items-center justify-center">
+                        —
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-2">{p.name}</td>
                   <td className="px-4 py-2">{p.sku}</td>
+                  <td className="px-4 py-2">{p.category?.name ?? "—"}</td>
                   <td className="px-4 py-2">${p.price.toFixed(2)}</td>
+                  <td className="px-4 py-2">{p.discount_percent ? `${p.discount_percent}%` : "—"}</td>
                   <td className="px-4 py-2">{p.quantity_per_box}</td>
                   <td className="px-4 py-2">{p.is_promoted ? "Yes" : "No"}</td>
                   <td className="px-4 py-2">
@@ -104,7 +123,7 @@ export function AdminProductList() {
                     </Link>
                     <button
                       type="button"
-                      onClick={() => handleDelete(p.id)}
+                      onClick={() => handleDelete(p)}
                       className="text-red-600 dark:text-red-400 hover:underline"
                     >
                       Delete

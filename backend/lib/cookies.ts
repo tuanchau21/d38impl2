@@ -1,5 +1,5 @@
 /**
- * Session cookie helpers (admin-login-design.md). httpOnly, secure in production, sameSite.
+ * Session cookie helpers (admin-high-level-design.md §5). httpOnly, secure in production, sameSite.
  */
 
 export const SESSION_COOKIE_NAME = "d38_session";

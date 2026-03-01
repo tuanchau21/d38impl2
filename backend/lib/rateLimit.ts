@@ -1,5 +1,5 @@
 /**
- * Simple in-memory rate limit for POST /api/auth/login (admin-login-design.md §7).
+ * Simple in-memory rate limit for POST /api/auth/login (admin-high-level-design.md §5.7).
  * Per-IP; not distributed (single process).
  */
 

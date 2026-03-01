@@ -43,7 +43,7 @@ export interface ApiError {
   error: string;
 }
 
-/** Admin user from GET /api/auth/me (admin-login-design.md). */
+/** Admin user from GET /api/auth/me (admin-high-level-design.md §5). */
 export interface AdminUser {
   id: number;
   email: string;

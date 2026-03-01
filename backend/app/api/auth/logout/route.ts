@@ -1,5 +1,5 @@
 /**
- * POST /api/auth/logout — invalidate session (admin-login-design.md §3).
+ * POST /api/auth/logout — invalidate session (admin-high-level-design.md §5.3).
  * Clears session cookie and invalidates server-side session.
  */
 

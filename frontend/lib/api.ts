@@ -125,7 +125,7 @@ export async function getPromoted(signal?: AbortSignal): Promise<Product[]> {
   }
 }
 
-// Auth (admin-login-design.md). credentials: include for session cookie.
+// Auth (admin-high-level-design.md §5). credentials: include for session cookie.
 export async function getAuthMe(signal?: AbortSignal): Promise<AdminUser> {
   const url = `${BASE}/api/auth/me`;
   const res = await fetch(url, { ...ADMIN_CREDENTIALS, signal });
@@ -323,6 +323,30 @@ export async function uploadProductImages(
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       logCancel("uploadProductImages", { url });
+      throw err;
+    }
+    throw err;
+  }
+}
+
+export async function deleteProductImage(
+  productId: number,
+  imageId: number,
+  options: { signal?: AbortSignal; adminKey?: string } = {}
+): Promise<void> {
+  const url = `${BASE}/api/admin/products/${productId}/images/${imageId}`;
+  const headers: HeadersInit = {};
+  if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
+  try {
+    const res = await fetch(url, { method: "DELETE", headers, ...ADMIN_CREDENTIALS, signal: options.signal });
+    if (!res.ok) {
+      const text = await res.text();
+      logError("deleteProductImage failed", new Error(text), { url, status: res.status });
+      throw new Error(text || `Delete image failed: ${res.status}`);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("deleteProductImage", { url });
       throw err;
     }
     throw err;

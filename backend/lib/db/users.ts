@@ -1,5 +1,5 @@
 /**
- * Admin users for login. Schema: admin_users table (admin-login-design.md §6).
+ * Admin users for login. Schema: admin_users table (admin-high-level-design.md §5.6).
  * Normal customers use the users table (placeholder); auth uses admin_users.
  */
 

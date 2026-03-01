@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * One-time seed: create first admin user (admin-login-design.md).
+ * One-time seed: create first admin user (admin-high-level-design.md §5.6).
  * Usage: set env ADMIN_SEED_EMAIL, ADMIN_SEED_PASSWORD and MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE (from backend/.env), then:
  *   node deploy/seed-admin.js
  * From repo root. Requires: cd deploy && npm install (once), then run from repo root.

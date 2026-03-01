@@ -1,6 +1,6 @@
 /**
  * Admin API protection: session (cookie) or X-Admin-Key.
- * admin-login-design.md §5: session/JWT or API key; requireAdmin tries session first, then API key.
+ * admin-high-level-design.md §5: session/JWT or API key; requireAdmin tries session first, then API key.
  */
 
 import { getSessionByToken } from "@/lib/db/sessions";
@@ -45,7 +45,7 @@ export async function getSessionUser(request: Request): Promise<AdminUser | null
 
 /**
  * Require admin: valid session (cookie) OR valid API key. Order: session first, then API key.
- * admin-login-design.md §5.
+ * admin-high-level-design.md §5.
  */
 export async function requireAdmin(
   request: Request

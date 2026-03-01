@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS users (
     UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- admin_users: staff who can log in to /admin (admin-login-design.md §6).
+-- admin_users: staff who can log in to /admin (admin-high-level-design.md §5.6).
 CREATE TABLE IF NOT EXISTS admin_users (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL,

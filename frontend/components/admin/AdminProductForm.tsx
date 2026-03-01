@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createProduct, updateProduct, uploadProductImages, getCategories } from "@/lib/api";
-import type { Category, Product } from "@/lib/types";
+import { createProduct, updateProduct, uploadProductImages, deleteProductImage, getCategories } from "@/lib/api";
+import type { Category, Product, ProductImage } from "@/lib/types";
 
 function logError(context: string, err: unknown): void {
   console.error(`[admin-product-form] ${context}`, { error: err });
@@ -36,12 +36,28 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
   );
   const [isPromoted, setIsPromoted] = useState(product?.is_promoted ?? false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<ProductImage[]>(product?.images ?? []);
 
   useEffect(() => {
     getCategories()
       .then(setCategories)
       .catch((err) => logError("load categories", err));
   }, []);
+
+  useEffect(() => {
+    if (product?.images) setExistingImages(product.images);
+  }, [product?.images]);
+
+  const handleRemoveImage = async (img: ProductImage) => {
+    if (!product) return;
+    try {
+      await deleteProductImage(product.id, img.id, opts);
+      setExistingImages((prev) => prev.filter((i) => i.id !== img.id));
+    } catch (err) {
+      logError("remove image", err);
+      setError(err instanceof Error ? err.message : "Failed to remove image");
+    }
+  };
 
   const opts = { adminKey: adminKey || undefined };
 
@@ -72,7 +88,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
         if (imageFiles.length > 0) {
           await uploadProductImages(created.id, imageFiles, opts);
         }
-        router.push("/admin/products");
+        router.push(`/admin/products/${created.id}/edit`);
         router.refresh();
       }
     } catch (err) {
@@ -209,6 +225,28 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       </div>
       <div>
         <label className="block text-sm font-medium mb-1">Images (3–6)</label>
+        {isEdit && existingImages.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {existingImages.map((img) => (
+              <div key={img.id} className="relative inline-block">
+                <img
+                  src={img.url}
+                  alt=""
+                  className="w-20 h-20 object-cover rounded border border-gray-200 dark:border-gray-600"
+                  loading="lazy"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(img)}
+                  className="absolute top-0 right-0 rounded bg-red-600 text-white text-xs px-1.5 py-0.5 hover:bg-red-700"
+                  aria-label={`Remove image ${img.id}`}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <input
           type="file"
           accept="image/*"
@@ -216,6 +254,9 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
           onChange={(e) => setImageFiles(Array.from(e.target.files ?? []))}
           className="w-full text-sm"
         />
+        {imageFiles.length > 0 && (
+          <p className="text-sm text-gray-500 mt-1">{imageFiles.length} file(s) selected to upload</p>
+        )}
       </div>
       {error && (
         <p className="text-red-600 dark:text-red-400" role="alert">

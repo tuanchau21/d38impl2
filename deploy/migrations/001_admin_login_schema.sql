@@ -1,4 +1,4 @@
--- Admin login schema (admin-login-design.md §6).
+-- Admin login schema (admin-high-level-design.md §5.6).
 -- Apply after initial schema.sql. Adds password_hash, name, role to users; creates sessions table.
 
 -- Add columns to users (id, email, created_at, updated_at already exist).
