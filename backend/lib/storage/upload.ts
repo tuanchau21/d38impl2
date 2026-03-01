@@ -19,7 +19,13 @@ function logError(context: string, err: unknown): void {
 
 function getClient(): S3Client {
   const region = process.env.OCI_OBJECT_STORAGE_REGION || "us-phoenix-1";
-  const endpoint = process.env.OCI_OBJECT_STORAGE_ENDPOINT || `https://objectstorage.${region}.oraclecloud.com`;
+  const ns = process.env.OCI_OBJECT_STORAGE_NAMESPACE || "";
+  const explicitEndpoint = process.env.OCI_OBJECT_STORAGE_ENDPOINT;
+  const endpoint =
+    explicitEndpoint ||
+    (ns
+      ? `https://${ns}.compat.objectstorage.${region}.oci.customer-oci.com`
+      : `https://objectstorage.${region}.oraclecloud.com`);
   const forcePathStyle = true;
   const credentials = {
     accessKeyId: process.env.OCI_OBJECT_STORAGE_ACCESS_KEY || "",
