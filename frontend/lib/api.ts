@@ -3,7 +3,10 @@
  * Logs on error, exception, and cancel per project coding rule.
  */
 
-import type { Product, ProductsListResponse } from "./types";
+import type { AdminUser, Category, Product, ProductsListResponse } from "./types";
+
+/** Default fetch options for admin: send cookies (session). */
+const ADMIN_CREDENTIALS: RequestInit = { credentials: "include" };
 
 /** Server-side (SSR) needs the backend base URL; browser uses same-origin (Nginx proxies /api to backend). */
 const BASE =
@@ -95,6 +98,19 @@ export async function getProduct(idOrSlug: string, signal?: AbortSignal): Promis
   }
 }
 
+export async function getCategories(signal?: AbortSignal): Promise<Category[]> {
+  const url = `${BASE}/api/categories`;
+  try {
+    return await fetchJson<Category[]>(url, {}, signal);
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("getCategories", { url });
+      throw err;
+    }
+    throw err;
+  }
+}
+
 export async function getPromoted(signal?: AbortSignal): Promise<Product[]> {
   const url = `${BASE}/api/promoted`;
   try {
@@ -109,7 +125,62 @@ export async function getPromoted(signal?: AbortSignal): Promise<Product[]> {
   }
 }
 
-// Admin API (same-origin; API key should be set by caller via headers)
+// Auth (admin-login-design.md). credentials: include for session cookie.
+export async function getAuthMe(signal?: AbortSignal): Promise<AdminUser> {
+  const url = `${BASE}/api/auth/me`;
+  const res = await fetch(url, { ...ADMIN_CREDENTIALS, signal });
+  if (!res.ok) {
+    const text = await res.text();
+    logError("getAuthMe failed", new Error(text), { url, status: res.status });
+    throw new Error(text || "Unauthorized");
+  }
+  const data = (await res.json()) as { user: AdminUser };
+  return data.user;
+}
+
+export async function login(
+  email: string,
+  password: string,
+  signal?: AbortSignal
+): Promise<{ user: AdminUser }> {
+  const url = `${BASE}/api/auth/login`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+    credentials: "include",
+    signal,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    let msg = text;
+    try {
+      const j = JSON.parse(text) as { error?: string };
+      if (j.error) msg = j.error;
+    } catch {
+      // ignore
+    }
+    logError("login failed", new Error(msg), { url, status: res.status });
+    throw new Error(msg || "Login failed");
+  }
+  return (await res.json()) as { user: AdminUser };
+}
+
+export async function logout(signal?: AbortSignal): Promise<void> {
+  const url = `${BASE}/api/auth/logout`;
+  try {
+    await fetch(url, { method: "POST", ...ADMIN_CREDENTIALS, signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("logout", { url });
+      throw err;
+    }
+    logError("logout failed", err, { url });
+    throw err;
+  }
+}
+
+// Admin API (session cookie via credentials, or API key in header)
 export async function getAdminProducts(
   params: { page?: number; limit?: number; q?: string } = {},
   options: { signal?: AbortSignal; adminKey?: string } = {}
@@ -123,7 +194,11 @@ export async function getAdminProducts(
   const headers: HeadersInit = {};
   if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
   try {
-    const data = await fetchJson<ProductsListResponse | Product[]>(url, { headers }, options.signal);
+    const data = await fetchJson<ProductsListResponse | Product[]>(
+      url,
+      { headers, ...ADMIN_CREDENTIALS },
+      options.signal
+    );
     if (Array.isArray(data)) return { products: data };
     return data;
   } catch (err) {
@@ -139,7 +214,7 @@ export async function createProduct(
   body: Partial<{
     name: string;
     sku: string;
-    category_id: number;
+    category_id: number | null;
     description: string;
     price: number;
     discount_percent: number;
@@ -152,7 +227,11 @@ export async function createProduct(
   const headers: HeadersInit = { "Content-Type": "application/json" };
   if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
   try {
-    return await fetchJson<Product>(url, { method: "POST", headers, body: JSON.stringify(body) }, options.signal);
+    return await fetchJson<Product>(
+      url,
+      { method: "POST", headers, body: JSON.stringify(body), ...ADMIN_CREDENTIALS },
+      options.signal
+    );
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       logCancel("createProduct", { url });
@@ -167,7 +246,7 @@ export async function updateProduct(
   body: Partial<{
     name: string;
     sku: string;
-    category_id: number;
+    category_id: number | null;
     description: string;
     price: number;
     discount_percent: number;
@@ -180,7 +259,11 @@ export async function updateProduct(
   const headers: HeadersInit = { "Content-Type": "application/json" };
   if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
   try {
-    return await fetchJson<Product>(url, { method: "PUT", headers, body: JSON.stringify(body) }, options.signal);
+    return await fetchJson<Product>(
+      url,
+      { method: "PUT", headers, body: JSON.stringify(body), ...ADMIN_CREDENTIALS },
+      options.signal
+    );
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       logCancel("updateProduct", { url });
@@ -198,7 +281,7 @@ export async function deleteProduct(
   const headers: HeadersInit = {};
   if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
   try {
-    const res = await fetch(url, { method: "DELETE", headers, signal: options.signal });
+    const res = await fetch(url, { method: "DELETE", headers, ...ADMIN_CREDENTIALS, signal: options.signal });
     if (!res.ok) {
       const text = await res.text();
       logError("deleteProduct failed", new Error(text), { url, status: res.status });
@@ -224,7 +307,13 @@ export async function uploadProductImages(
   const headers: HeadersInit = {};
   if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
   try {
-    const res = await fetch(url, { method: "POST", headers, body: form, signal: options.signal });
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: form,
+      ...ADMIN_CREDENTIALS,
+      signal: options.signal,
+    });
     if (!res.ok) {
       const text = await res.text();
       logError("uploadProductImages failed", new Error(text), { url, status: res.status });

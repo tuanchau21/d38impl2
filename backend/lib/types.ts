@@ -42,3 +42,11 @@ export interface ProductsListResponse {
 export interface ApiError {
   error: string;
 }
+
+/** Admin user (admin-login-design.md). No password in API responses. */
+export interface AdminUser {
+  id: number;
+  email: string;
+  name?: string | null;
+  role?: string | null;
+}

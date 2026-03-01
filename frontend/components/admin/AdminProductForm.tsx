@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createProduct, updateProduct, uploadProductImages } from "@/lib/api";
-import type { Product } from "@/lib/types";
+import { createProduct, updateProduct, uploadProductImages, getCategories } from "@/lib/api";
+import type { Category, Product } from "@/lib/types";
 
 function logError(context: string, err: unknown): void {
   console.error(`[admin-product-form] ${context}`, { error: err });
@@ -20,6 +20,10 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adminKey, setAdminKey] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryId, setCategoryId] = useState<number | "">(
+    product?.category_id != null && product.category_id !== 0 ? product.category_id : ""
+  );
   const [name, setName] = useState(product?.name ?? "");
   const [sku, setSku] = useState(product?.sku ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
@@ -33,6 +37,12 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
   const [isPromoted, setIsPromoted] = useState(product?.is_promoted ?? false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
 
+  useEffect(() => {
+    getCategories()
+      .then(setCategories)
+      .catch((err) => logError("load categories", err));
+  }, []);
+
   const opts = { adminKey: adminKey || undefined };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,6 +53,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       const payload = {
         name,
         sku,
+        category_id: categoryId === "" ? null : (categoryId as number),
         description: description || undefined,
         price: parseFloat(price) || 0,
         discount_percent: parseFloat(discountPercent) || 0,
@@ -109,6 +120,24 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
           onChange={(e) => setSku(e.target.value)}
           className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
         />
+      </div>
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium mb-1">
+          Category
+        </label>
+        <select
+          id="category"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value === "" ? "" : Number(e.target.value))}
+          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
+        >
+          <option value="">None</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
       </div>
       <div>
         <label htmlFor="description" className="block text-sm font-medium mb-1">

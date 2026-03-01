@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminKey } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getProductByIdOrSlug, getProductImageCount, addProductImages } from "@/lib/db/products";
 import { uploadProductImage } from "@/lib/storage/upload";
 import { randomUUID } from "crypto";
@@ -15,7 +15,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminKey(request);
+  const auth = await requireAdmin(request);
   if (!auth.ok) {
     return NextResponse.json(auth.body, { status: auth.status });
   }

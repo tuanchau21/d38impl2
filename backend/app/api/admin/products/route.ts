@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminKey } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { listProducts, createProduct } from "@/lib/db/products";
 
 function logError(context: string, err: unknown): void {
@@ -7,7 +7,7 @@ function logError(context: string, err: unknown): void {
 }
 
 export async function GET(request: Request) {
-  const auth = requireAdminKey(request);
+  const auth = await requireAdmin(request);
   if (!auth.ok) {
     return NextResponse.json(auth.body, { status: auth.status });
   }
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = requireAdminKey(request);
+  const auth = await requireAdmin(request);
   if (!auth.ok) {
     return NextResponse.json(auth.body, { status: auth.status });
   }

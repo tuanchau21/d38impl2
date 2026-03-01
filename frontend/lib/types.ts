@@ -42,3 +42,11 @@ export interface ProductsListResponse {
 export interface ApiError {
   error: string;
 }
+
+/** Admin user from GET /api/auth/me (admin-login-design.md). */
+export interface AdminUser {
+  id: number;
+  email: string;
+  name?: string | null;
+  role?: string | null;
+}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminKey } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { updateProduct, deleteProduct } from "@/lib/db/products";
 
 function logError(context: string, err: unknown): void {
@@ -10,7 +10,7 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminKey(req);
+  const auth = await requireAdmin(req);
   if (!auth.ok) {
     return NextResponse.json(auth.body, { status: auth.status });
   }
@@ -53,7 +53,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAdminKey(req);
+  const auth = await requireAdmin(req);
   if (!auth.ok) {
     return NextResponse.json(auth.body, { status: auth.status });
   }
