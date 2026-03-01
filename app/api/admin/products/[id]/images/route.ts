@@ -24,12 +24,54 @@ export async function POST(
   if (Number.isNaN(numId)) {
     return NextResponse.json({ error: "Invalid product id" }, { status: 400 });
   }
+  // #region agent log
+  fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
+    body: JSON.stringify({
+      sessionId: "7fe144",
+      location: "app/images/route.ts:entry",
+      message: "POST images entry",
+      data: { id, numId },
+      timestamp: Date.now(),
+      hypothesisId: "H2",
+    }),
+  }).catch(() => {});
+  // #endregion
   try {
     const product = await getProductByIdOrSlug(id);
+    // #region agent log
+    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
+      body: JSON.stringify({
+        sessionId: "7fe144",
+        location: "app/images/route.ts:after getProduct",
+        message: "product lookup done",
+        data: { productFound: !!product, productId: product?.id },
+        timestamp: Date.now(),
+        hypothesisId: "H2",
+      }),
+    }).catch(() => {});
+    // #endregion
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
     const currentCount = await getProductImageCount(numId);
+    // #region agent log
+    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
+      body: JSON.stringify({
+        sessionId: "7fe144",
+        location: "app/images/route.ts:after getProductImageCount",
+        message: "image count done",
+        data: { currentCount },
+        timestamp: Date.now(),
+        hypothesisId: "H2",
+      }),
+    }).catch(() => {});
+    // #endregion
     const formData = await request.formData();
     const files = formData.getAll("images");
     const toUpload: { file: File; buffer: Buffer }[] = [];
@@ -51,6 +93,20 @@ export async function POST(
       );
     }
     const urls: { url: string; sort_order: number }[] = [];
+    // #region agent log
+    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
+      body: JSON.stringify({
+        sessionId: "7fe144",
+        location: "app/images/route.ts:before upload loop",
+        message: "starting upload loop",
+        data: { toUploadLength: toUpload.length },
+        timestamp: Date.now(),
+        hypothesisId: "H1",
+      }),
+    }).catch(() => {});
+    // #endregion
     for (let i = 0; i < toUpload.length; i++) {
       const { file, buffer } = toUpload[i]!;
       const ext = file.name?.split(".").pop()?.toLowerCase() || "webp";
@@ -59,9 +115,52 @@ export async function POST(
       const url = await uploadProductImage(numId, buffer, contentType, keySuffix);
       urls.push({ url, sort_order: i });
     }
+    // #region agent log
+    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
+      body: JSON.stringify({
+        sessionId: "7fe144",
+        location: "app/images/route.ts:after upload loop",
+        message: "upload loop done",
+        data: { urlsLength: urls.length },
+        timestamp: Date.now(),
+        hypothesisId: "H1",
+      }),
+    }).catch(() => {});
+    // #endregion
     const inserted = await addProductImages(numId, urls);
+    // #region agent log
+    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
+      body: JSON.stringify({
+        sessionId: "7fe144",
+        location: "app/images/route.ts:after addProductImages",
+        message: "addProductImages done",
+        data: { insertedLength: inserted.length },
+        timestamp: Date.now(),
+        hypothesisId: "H3",
+      }),
+    }).catch(() => {});
+    // #endregion
     return NextResponse.json(inserted);
   } catch (err) {
+    // #region agent log
+    const errObj = err instanceof Error ? { name: err.name, message: err.message, code: (err as { code?: string }).code } : { err: String(err) };
+    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
+      body: JSON.stringify({
+        sessionId: "7fe144",
+        location: "app/images/route.ts:catch",
+        message: "POST upload failed",
+        data: errObj,
+        timestamp: Date.now(),
+        hypothesisId: "H1-H5",
+      }),
+    }).catch(() => {});
+    // #endregion
     logError("POST upload failed", err);
     return NextResponse.json({ error: "Failed to upload images" }, { status: 500 });
   }

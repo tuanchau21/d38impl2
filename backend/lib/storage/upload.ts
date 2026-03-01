@@ -43,16 +43,46 @@ export async function uploadProductImage(
   const client = getClient();
   const ns = namespace();
   const bucketName = bucket();
+  const bucketParam = ns ? `${ns}/${bucketName}` : bucketName;
+  // #region agent log
+  fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
+    body: JSON.stringify({
+      sessionId: "7fe144",
+      location: "storage/upload.ts:before PutObject",
+      message: "uploadProductImage start",
+      data: { productId, key, hasNs: !!ns, bucketName, bucketParamLength: bucketParam.length },
+      timestamp: Date.now(),
+      hypothesisId: "H1",
+    }),
+  }).catch(() => {});
+  // #endregion
   try {
     await client.send(
       new PutObjectCommand({
-        Bucket: ns ? `${ns}/${bucketName}` : bucketName,
+        Bucket: bucketParam,
         Key: key,
         Body: buffer,
         ContentType: contentType,
       })
     );
   } catch (err) {
+    // #region agent log
+    const errData = err instanceof Error ? { name: err.name, message: err.message, code: (err as { code?: string }).code } : { err: String(err) };
+    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
+      body: JSON.stringify({
+        sessionId: "7fe144",
+        location: "storage/upload.ts:catch",
+        message: "uploadProductImage failed",
+        data: errData,
+        timestamp: Date.now(),
+        hypothesisId: "H1",
+      }),
+    }).catch(() => {});
+    // #endregion
     logError("uploadProductImage failed", err);
     throw err;
   }
