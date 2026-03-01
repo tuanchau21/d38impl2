@@ -1,0 +1,28 @@
+# Root-level ignores for implementation (frontend + backend)
+# Ensures node_modules and build outputs are never committed when adding from repo root.
+
+# Frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+frontend/coverage/
+
+# Backend
+backend/node_modules/
+backend/dist/
+backend/build/
+backend/out/
+backend/coverage/
+
+# Environment files (any location)
+.env
+.env.local
+.env.*.local
+
+# Logs and caches
+*.log
+.cache/
+.turbo/
+.vercel/
