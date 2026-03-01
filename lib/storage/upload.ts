@@ -2,7 +2,14 @@
  * Upload to Oracle Object Storage (S3-compatible API). Per high-level-plan §6.
  */
 
+import { appendFileSync } from "fs";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+
+function debugLog(payload: Record<string, unknown>): void {
+  try {
+    appendFileSync("debug-7fe144.log", JSON.stringify({ sessionId: "7fe144", ...payload, timestamp: Date.now() }) + "\n");
+  } catch (_) {}
+}
 
 function logError(context: string, err: unknown): void {
   if (typeof console !== "undefined" && console.error) {
@@ -45,18 +52,7 @@ export async function uploadProductImage(
   const bucketName = bucket();
   const bucketParam = ns ? `${ns}/${bucketName}` : bucketName;
   // #region agent log
-  fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
-    body: JSON.stringify({
-      sessionId: "7fe144",
-      location: "lib/storage/upload.ts:before PutObject",
-      message: "uploadProductImage start",
-      data: { productId, key, hasNs: !!ns, bucketName, bucketParamLength: bucketParam.length },
-      timestamp: Date.now(),
-      hypothesisId: "H1",
-    }),
-  }).catch(() => {});
+  debugLog({ location: "lib/storage/upload.ts:before PutObject", message: "uploadProductImage start", data: { productId, key, hasNs: !!ns, bucketName, bucketParamLength: bucketParam.length }, hypothesisId: "H1" });
   // #endregion
   try {
     await client.send(
@@ -70,18 +66,7 @@ export async function uploadProductImage(
   } catch (err) {
     // #region agent log
     const errData = err instanceof Error ? { name: err.name, message: err.message, code: (err as { code?: string }).code } : { err: String(err) };
-    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "7fe144" },
-      body: JSON.stringify({
-        sessionId: "7fe144",
-        location: "lib/storage/upload.ts:catch",
-        message: "uploadProductImage failed",
-        data: errData,
-        timestamp: Date.now(),
-        hypothesisId: "H1",
-      }),
-    }).catch(() => {});
+    debugLog({ location: "lib/storage/upload.ts:catch", message: "uploadProductImage failed", data: errData, hypothesisId: "H1" });
     // #endregion
     logError("uploadProductImage failed", err);
     throw err;
