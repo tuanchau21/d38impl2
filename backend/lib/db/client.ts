@@ -1,5 +1,5 @@
 /**
- * MySQL client for Oracle HeatWave. Connection from env (DATABASE_URL or MYSQL_*).
+ * MySQL client for Oracle HeatWave. Connection from env (MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_PORT).
  */
 
 import mysql from "mysql2/promise";
@@ -11,22 +11,6 @@ function logError(context: string, err: unknown): void {
 }
 
 function getConfig(): mysql.ConnectionOptions {
-  const url = process.env.DATABASE_URL;
-  if (url) {
-    try {
-      const u = new URL(url);
-      return {
-        host: u.hostname,
-        port: u.port ? parseInt(u.port, 10) : 3306,
-        user: u.username,
-        password: u.password,
-        database: u.pathname?.replace(/^\//, "") || "d38shop",
-      };
-    } catch (err) {
-      logError("Invalid DATABASE_URL", err);
-      throw err;
-    }
-  }
   const host = process.env.MYSQL_HOST || "localhost";
   const port = process.env.MYSQL_PORT ? parseInt(process.env.MYSQL_PORT, 10) : 3306;
   const user = process.env.MYSQL_USER || "root";

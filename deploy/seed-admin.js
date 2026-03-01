@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * One-time seed: create first admin user (admin-login-design.md).
- * Usage: set env ADMIN_SEED_EMAIL, ADMIN_SEED_PASSWORD and DATABASE_URL (or MYSQL_*), then:
+ * Usage: set env ADMIN_SEED_EMAIL, ADMIN_SEED_PASSWORD and MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE (from backend/.env), then:
  *   node deploy/seed-admin.js
  * From repo root. Requires: cd deploy && npm install (once), then run from repo root.
  */
@@ -31,24 +31,13 @@ async function main() {
     process.exit(1);
   }
   const hash = await bcrypt.hash(password, 10);
-  const connOpts = process.env.DATABASE_URL
-    ? (() => {
-        const u = new URL(process.env.DATABASE_URL);
-        return {
-          host: u.hostname,
-          port: u.port || 3306,
-          user: u.username,
-          password: u.password,
-          database: u.pathname.replace(/^\//, "") || "d38shop",
-        };
-      })()
-    : {
-        host: process.env.MYSQL_HOST || "localhost",
-        port: parseInt(process.env.MYSQL_PORT || "3306", 10),
-        user: process.env.MYSQL_USER || "root",
-        password: process.env.MYSQL_PASSWORD || "",
-        database: process.env.MYSQL_DATABASE || "d38shop",
-      };
+  const connOpts = {
+    host: process.env.MYSQL_HOST || "localhost",
+    port: parseInt(process.env.MYSQL_PORT || "3306", 10),
+    user: process.env.MYSQL_USER || "root",
+    password: process.env.MYSQL_PASSWORD || "",
+    database: process.env.MYSQL_DATABASE || "d38shop",
+  };
   const conn = await mysql.createConnection(connOpts);
   try {
     const [rows] = await conn.execute(

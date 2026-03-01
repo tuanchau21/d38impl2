@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * CLI to create, edit, or remove admin users (users table).
- * DB: DATABASE_URL or MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE.
+ * DB: MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE (from backend/.env).
  * Run from repo root. Requires: cd deploy && npm install (once), then run from repo root.
  *
  * Create:  node deploy/manage-admin-users.js create --email admin@example.com --password secret [--name "Admin"] [--role admin]
@@ -44,16 +44,6 @@ function parseArgs() {
 }
 
 function getConnOpts() {
-  if (process.env.DATABASE_URL) {
-    const u = new URL(process.env.DATABASE_URL);
-    return {
-      host: u.hostname,
-      port: u.port || 3306,
-      user: u.username,
-      password: u.password,
-      database: u.pathname.replace(/^\//, "") || "d38shop",
-    };
-  }
   return {
     host: process.env.MYSQL_HOST || "localhost",
     port: parseInt(process.env.MYSQL_PORT || "3306", 10),
@@ -188,7 +178,7 @@ async function main() {
 
 main().catch((err) => {
   if (err.code === "ECONNREFUSED") {
-    console.error("Database connection refused. Ensure backend/.env has DATABASE_URL or MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE and that MySQL is reachable (e.g. Oracle HeatWave endpoint).");
+    console.error("Database connection refused. Ensure backend/.env has MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE and that MySQL is reachable (e.g. Oracle HeatWave endpoint).");
   }
   console.error(err);
   process.exit(1);
