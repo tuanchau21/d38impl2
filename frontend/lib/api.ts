@@ -111,6 +111,28 @@ export async function getCategories(signal?: AbortSignal): Promise<Category[]> {
   }
 }
 
+export async function createCategory(
+  body: { name: string; slug?: string; parent_id?: number | null },
+  options: { signal?: AbortSignal; adminKey?: string } = {}
+): Promise<Category> {
+  const url = `${BASE}/api/admin/categories`;
+  const headers: HeadersInit = { "Content-Type": "application/json" };
+  if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
+  try {
+    return await fetchJson<Category>(
+      url,
+      { method: "POST", headers, body: JSON.stringify(body), ...ADMIN_CREDENTIALS },
+      options.signal
+    );
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("createCategory", { url });
+      throw err;
+    }
+    throw err;
+  }
+}
+
 export async function getPromoted(signal?: AbortSignal): Promise<Product[]> {
   const url = `${BASE}/api/promoted`;
   try {

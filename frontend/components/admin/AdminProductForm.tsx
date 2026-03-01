@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createProduct, updateProduct, uploadProductImages, deleteProductImage, getCategories } from "@/lib/api";
+import {
+  createProduct,
+  updateProduct,
+  uploadProductImages,
+  deleteProductImage,
+  getCategories,
+  createCategory,
+} from "@/lib/api";
 import type { Category, Product, ProductImage } from "@/lib/types";
 
 function logError(context: string, err: unknown): void {
@@ -37,11 +44,19 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
   const [isPromoted, setIsPromoted] = useState(product?.is_promoted ?? false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<ProductImage[]>(product?.images ?? []);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [addCategoryLoading, setAddCategoryLoading] = useState(false);
+  const [addCategoryError, setAddCategoryError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadCategories = () => {
     getCategories()
       .then(setCategories)
       .catch((err) => logError("load categories", err));
+  };
+
+  useEffect(() => {
+    loadCategories();
   }, []);
 
   useEffect(() => {
@@ -60,6 +75,29 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
   };
 
   const opts = { adminKey: adminKey || undefined };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = newCategoryName.trim();
+    if (!name) {
+      setAddCategoryError("Name is required");
+      return;
+    }
+    setAddCategoryError(null);
+    setAddCategoryLoading(true);
+    try {
+      const created = await createCategory({ name }, opts);
+      loadCategories();
+      setCategoryId(created.id);
+      setNewCategoryName("");
+      setShowAddCategory(false);
+    } catch (err) {
+      logError("create category", err);
+      setAddCategoryError(err instanceof Error ? err.message : "Failed to create category");
+    } finally {
+      setAddCategoryLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,19 +179,79 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
         <label htmlFor="category" className="block text-sm font-medium mb-1">
           Category
         </label>
-        <select
-          id="category"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value === "" ? "" : Number(e.target.value))}
-          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
-        >
-          <option value="">None</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="flex gap-2 items-center">
+          <select
+            id="category"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value === "" ? "" : Number(e.target.value))}
+            className="flex-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
+            aria-label="Product category"
+          >
+            <option value="">None</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setShowAddCategory(true)}
+            className="px-3 py-2 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm whitespace-nowrap"
+          >
+            Add category
+          </button>
+        </div>
+        {showAddCategory && (
+          <div
+            className="mt-3 p-3 rounded border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50"
+            role="dialog"
+            aria-labelledby="add-category-title"
+          >
+            <h3 id="add-category-title" className="text-sm font-medium mb-2">
+              New category
+            </h3>
+            <form onSubmit={handleAddCategory} className="space-y-2">
+              <label htmlFor="newCategoryName" className="sr-only">
+                Category name
+              </label>
+              <input
+                id="newCategoryName"
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Category name"
+                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                autoFocus
+              />
+              {addCategoryError && (
+                <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                  {addCategoryError}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={addCategoryLoading}
+                  className="px-3 py-1.5 rounded bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium disabled:opacity-50"
+                >
+                  {addCategoryLoading ? "Creating…" : "Create"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddCategory(false);
+                    setNewCategoryName("");
+                    setAddCategoryError(null);
+                  }}
+                  className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
       <div>
         <label htmlFor="description" className="block text-sm font-medium mb-1">
