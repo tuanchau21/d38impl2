@@ -7,10 +7,17 @@
  */
 
 const path = require("path");
+const fs = require("fs");
 const deployDir = __dirname;
 const deployNodeModules = path.join(deployDir, "node_modules");
-if (require("fs").existsSync(deployNodeModules)) {
+if (fs.existsSync(deployNodeModules)) {
   module.paths.unshift(deployNodeModules);
+}
+
+// Load backend .env so DB connection uses same config as the app
+const backendEnv = path.join(deployDir, "..", "backend", ".env");
+if (fs.existsSync(backendEnv)) {
+  require("dotenv").config({ path: backendEnv });
 }
 
 const bcrypt = require("bcrypt");

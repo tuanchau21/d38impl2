@@ -5,6 +5,7 @@
   "description": "Deploy scripts (seed-admin, manage-admin-users). Run npm install here once, then node deploy/script.js from repo root.",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "dotenv": "^16.0.0",
     "mysql2": "^3.11.0"
   }
 }

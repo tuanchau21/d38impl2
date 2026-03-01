@@ -11,10 +11,17 @@
  */
 
 const path = require("path");
+const fs = require("fs");
 const deployDir = __dirname;
 const deployNodeModules = path.join(deployDir, "node_modules");
-if (require("fs").existsSync(deployNodeModules)) {
+if (fs.existsSync(deployNodeModules)) {
   module.paths.unshift(deployNodeModules);
+}
+
+// Load backend .env so DB connection uses same config as the app (no need to export MYSQL_* manually)
+const backendEnv = path.join(deployDir, "..", "backend", ".env");
+if (fs.existsSync(backendEnv)) {
+  require("dotenv").config({ path: backendEnv });
 }
 
 const bcrypt = require("bcrypt");
@@ -180,6 +187,9 @@ async function main() {
 }
 
 main().catch((err) => {
+  if (err.code === "ECONNREFUSED") {
+    console.error("Database connection refused. Ensure backend/.env has DATABASE_URL or MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE and that MySQL is reachable (e.g. Oracle HeatWave endpoint).");
+  }
   console.error(err);
   process.exit(1);
 });
