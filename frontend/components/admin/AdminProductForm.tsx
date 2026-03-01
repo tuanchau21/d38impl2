@@ -26,7 +26,6 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
   const isEdit = !!product;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [adminKey, setAdminKey] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState<number | "">(
     product?.category_id != null && product.category_id !== 0 ? product.category_id : ""
@@ -66,7 +65,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
   const handleRemoveImage = async (img: ProductImage) => {
     if (!product) return;
     try {
-      await deleteProductImage(product.id, img.id, opts);
+      await deleteProductImage(product.id, img.id);
       setExistingImages((prev) => prev.filter((i) => i.id !== img.id));
     } catch (err) {
       logError("remove image", err);
@@ -74,10 +73,22 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
     }
   };
 
-  const opts = { adminKey: adminKey || undefined };
-
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
+    // #region agent log
+    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceaeb5" },
+      body: JSON.stringify({
+        sessionId: "ceaeb5",
+        location: "AdminProductForm.tsx:handleAddCategory.entry",
+        message: "addCategory.entry",
+        data: { newCategoryNameTrimmed: newCategoryName.trim() },
+        timestamp: Date.now(),
+        hypothesisId: "addCategory_entered",
+      }),
+    }).catch(() => {});
+    // #endregion
     const name = newCategoryName.trim();
     if (!name) {
       setAddCategoryError("Name is required");
@@ -86,12 +97,40 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
     setAddCategoryError(null);
     setAddCategoryLoading(true);
     try {
-      const created = await createCategory({ name }, opts);
+      const created = await createCategory({ name });
+      // #region agent log
+      fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceaeb5" },
+        body: JSON.stringify({
+          sessionId: "ceaeb5",
+          location: "AdminProductForm.tsx:handleAddCategory.success",
+          message: "addCategory.success",
+          data: { createdId: created.id },
+          timestamp: Date.now(),
+          hypothesisId: "addCategory_success",
+        }),
+      }).catch(() => {});
+      // #endregion
       loadCategories();
       setCategoryId(created.id);
       setNewCategoryName("");
       setShowAddCategory(false);
     } catch (err) {
+      // #region agent log
+      fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceaeb5" },
+        body: JSON.stringify({
+          sessionId: "ceaeb5",
+          location: "AdminProductForm.tsx:handleAddCategory.catch",
+          message: "addCategory.error",
+          data: { errMessage: err instanceof Error ? err.message : String(err) },
+          timestamp: Date.now(),
+          hypothesisId: "addCategory_error",
+        }),
+      }).catch(() => {});
+      // #endregion
       logError("create category", err);
       setAddCategoryError(err instanceof Error ? err.message : "Failed to create category");
     } finally {
@@ -101,6 +140,20 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // #region agent log
+    fetch("http://127.0.0.1:7484/ingest/cda7c92b-65a3-4c72-a194-70a9941e9586", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceaeb5" },
+      body: JSON.stringify({
+        sessionId: "ceaeb5",
+        location: "AdminProductForm.tsx:handleSubmit.entry",
+        message: "productSubmit.entry",
+        data: { isEdit },
+        timestamp: Date.now(),
+        hypothesisId: "productSubmit_entered",
+      }),
+    }).catch(() => {});
+    // #endregion
     setError(null);
     setLoading(true);
     try {
@@ -115,16 +168,16 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
         is_promoted: isPromoted,
       };
       if (isEdit && product) {
-        await updateProduct(product.id, payload, opts);
+        await updateProduct(product.id, payload);
         if (imageFiles.length > 0) {
-          await uploadProductImages(product.id, imageFiles, opts);
+          await uploadProductImages(product.id, imageFiles);
         }
         router.push("/admin/products");
         router.refresh();
       } else {
-        const created = await createProduct(payload, opts);
+        const created = await createProduct(payload);
         if (imageFiles.length > 0) {
-          await uploadProductImages(created.id, imageFiles, opts);
+          await uploadProductImages(created.id, imageFiles);
         }
         router.push(`/admin/products/${created.id}/edit`);
         router.refresh();
@@ -139,18 +192,6 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
-      <div>
-        <label htmlFor="adminKey" className="block text-sm font-medium mb-1">
-          Admin API key (optional for dev)
-        </label>
-        <input
-          id="adminKey"
-          type="password"
-          value={adminKey}
-          onChange={(e) => setAdminKey(e.target.value)}
-          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
-        />
-      </div>
       <div>
         <label htmlFor="name" className="block text-sm font-medium mb-1">
           Name *
@@ -211,7 +252,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
             <h3 id="add-category-title" className="text-sm font-medium mb-2">
               New category
             </h3>
-            <form onSubmit={handleAddCategory} className="space-y-2">
+            <div className="space-y-2">
               <label htmlFor="newCategoryName" className="sr-only">
                 Category name
               </label>
@@ -220,6 +261,12 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
                 type="text"
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddCategory(e as unknown as React.FormEvent);
+                  }
+                }}
                 placeholder="Category name"
                 className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
                 autoFocus
@@ -231,8 +278,12 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
               )}
               <div className="flex gap-2">
                 <button
-                  type="submit"
+                  type="button"
                   disabled={addCategoryLoading}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAddCategory(e as unknown as React.FormEvent);
+                  }}
                   className="px-3 py-1.5 rounded bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium disabled:opacity-50"
                 >
                   {addCategoryLoading ? "Creating…" : "Create"}
@@ -249,7 +300,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
                   Cancel
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         )}
       </div>

@@ -14,16 +14,12 @@ export function AdminProductList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [adminKey, setAdminKey] = useState("");
 
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAdminProducts(
-        { q: search || undefined },
-        { adminKey: adminKey || undefined }
-      );
+      const data = await getAdminProducts({ q: search || undefined });
       const list = data.products ?? [];
       setProducts(list);
     } catch (err) {
@@ -41,7 +37,7 @@ export function AdminProductList() {
   const handleDelete = async (p: Product) => {
     if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
     try {
-      await deleteProduct(p.id, { adminKey: adminKey || undefined });
+      await deleteProduct(p.id);
       setProducts((prev) => prev.filter((x) => x.id !== p.id));
     } catch (err) {
       logError("delete product", err);
@@ -58,13 +54,6 @@ export function AdminProductList() {
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search products..."
           className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-64"
-        />
-        <input
-          type="password"
-          value={adminKey}
-          onChange={(e) => setAdminKey(e.target.value)}
-          placeholder="Admin API key (optional for dev)"
-          className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-48"
         />
       </div>
       {error && (
