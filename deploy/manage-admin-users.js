@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * CLI to create, edit, or remove admin users (users table).
+ * CLI to create, edit, or remove admin users (admin_users table).
+ * Normal customers use the users table (placeholder); admins use admin_users.
  * DB: MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE (from backend/.env).
  * Run from repo root. Requires: cd deploy && npm install (once), then run from repo root.
  *
@@ -55,14 +56,14 @@ function getConnOpts() {
 
 async function create(conn, { email, password, name, role }) {
   const normEmail = email.trim().toLowerCase();
-  const [rows] = await conn.execute("SELECT id FROM users WHERE email = ?", [normEmail]);
+  const [rows] = await conn.execute("SELECT id FROM admin_users WHERE email = ?", [normEmail]);
   if (rows.length > 0) {
-    console.error("User already exists:", normEmail);
+    console.error("Admin user already exists:", normEmail);
     process.exit(1);
   }
   const hash = await bcrypt.hash(password, 10);
   await conn.execute(
-    "INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)",
+    "INSERT INTO admin_users (email, password_hash, name, role) VALUES (?, ?, ?, ?)",
     [normEmail, hash, name || null, role || "admin"]
   );
   console.log("Admin user created:", normEmail);
@@ -70,9 +71,9 @@ async function create(conn, { email, password, name, role }) {
 
 async function edit(conn, { email, password, name, role }) {
   const normEmail = email.trim().toLowerCase();
-  const [rows] = await conn.execute("SELECT id, email FROM users WHERE email = ?", [normEmail]);
+  const [rows] = await conn.execute("SELECT id, email FROM admin_users WHERE email = ?", [normEmail]);
   if (rows.length === 0) {
-    console.error("User not found:", normEmail);
+    console.error("Admin user not found:", normEmail);
     process.exit(1);
   }
   const userId = rows[0].id;
@@ -95,7 +96,7 @@ async function edit(conn, { email, password, name, role }) {
     return;
   }
   values.push(userId);
-  await conn.execute(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, values);
+  await conn.execute(`UPDATE admin_users SET ${updates.join(", ")} WHERE id = ?`, values);
   console.log("Admin user updated:", normEmail);
 }
 
@@ -109,9 +110,9 @@ async function remove(conn, { email, id }) {
     }
   } else if (email != null && email !== "") {
     const normEmail = email.trim().toLowerCase();
-    const [rows] = await conn.execute("SELECT id FROM users WHERE email = ?", [normEmail]);
+    const [rows] = await conn.execute("SELECT id FROM admin_users WHERE email = ?", [normEmail]);
     if (rows.length === 0) {
-      console.error("User not found:", normEmail);
+      console.error("Admin user not found:", normEmail);
       process.exit(1);
     }
     userId = rows[0].id;
@@ -120,7 +121,7 @@ async function remove(conn, { email, id }) {
     process.exit(1);
   }
   await conn.execute("DELETE FROM sessions WHERE user_id = ?", [userId]);
-  const [result] = await conn.execute("DELETE FROM users WHERE id = ?", [userId]);
+  const [result] = await conn.execute("DELETE FROM admin_users WHERE id = ?", [userId]);
   const affected = result.affectedRows;
   if (affected === 0) {
     console.error("User not found (id:", userId, ")");

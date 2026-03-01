@@ -1,5 +1,6 @@
 /**
- * Admin users for login. Schema: users table (admin-login-design.md §6).
+ * Admin users for login. Schema: admin_users table (admin-login-design.md §6).
+ * Normal customers use the users table (placeholder); auth uses admin_users.
  */
 
 import { query } from "./client";
@@ -15,7 +16,7 @@ export interface UserRow {
 
 export async function findUserByEmail(email: string): Promise<(UserRow & { password_hash: string }) | null> {
   const rows = await query<UserRow[]>(
-    "SELECT id, email, password_hash, name, role FROM users WHERE email = ? LIMIT 1",
+    "SELECT id, email, password_hash, name, role FROM admin_users WHERE email = ? LIMIT 1",
     [email.trim().toLowerCase()]
   );
   const row = rows[0];
@@ -25,7 +26,7 @@ export async function findUserByEmail(email: string): Promise<(UserRow & { passw
 
 export async function getUserById(id: number): Promise<AdminUser | null> {
   const rows = await query<UserRow[]>(
-    "SELECT id, email, name, role FROM users WHERE id = ? LIMIT 1",
+    "SELECT id, email, name, role FROM admin_users WHERE id = ? LIMIT 1",
     [id]
   );
   const row = rows[0];

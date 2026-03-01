@@ -41,15 +41,15 @@ async function main() {
   const conn = await mysql.createConnection(connOpts);
   try {
     const [rows] = await conn.execute(
-      "SELECT id FROM users WHERE email = ?",
+      "SELECT id FROM admin_users WHERE email = ?",
       [email.trim().toLowerCase()]
     );
     if (rows.length > 0) {
-      console.log("User already exists:", email);
+      console.log("Admin user already exists:", email);
       return;
     }
     await conn.execute(
-      "INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)",
+      "INSERT INTO admin_users (email, password_hash, name, role) VALUES (?, ?, ?, ?)",
       [email.trim().toLowerCase(), hash, process.env.ADMIN_SEED_NAME || null, "admin"]
     );
     console.log("Admin user created:", email);
