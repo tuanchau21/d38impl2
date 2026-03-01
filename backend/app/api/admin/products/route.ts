@@ -24,7 +24,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ products: result.products, total: result.total, hasMore: result.hasMore });
   } catch (err) {
     logError("GET list failed", err);
-    return NextResponse.json({ error: "Failed to list products" }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    const error = message ? `Failed to list products: ${message}` : "Failed to list products";
+    return NextResponse.json({ error }, { status: 500 });
   }
 }
 

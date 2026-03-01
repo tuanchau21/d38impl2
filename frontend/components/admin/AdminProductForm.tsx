@@ -144,7 +144,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
         if (imageFiles.length > 0) {
           await uploadProductImages(created.id, imageFiles);
         }
-        router.push(`/admin/products/${created.id}/edit`);
+        router.push("/admin/products");
         router.refresh();
       }
     } catch (err) {
