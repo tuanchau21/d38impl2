@@ -28,12 +28,15 @@ export function HomeProductList() {
       : 24;
   })();
   const view = (searchParams.get("view") === "list" ? "list" : "grid") as ProductCardView;
+  const category = searchParams.get("category") ?? "";
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getProducts({ page, limit: perPage });
+      const params: Parameters<typeof getProducts>[0] = { page, limit: perPage };
+      if (category.trim()) params.category = category.trim();
+      const data = await getProducts(params);
       setProducts(data.products ?? []);
       setTotal(data.total ?? data.products?.length ?? 0);
     } catch (err) {
@@ -42,7 +45,7 @@ export function HomeProductList() {
     } finally {
       setLoading(false);
     }
-  }, [page, perPage]);
+  }, [page, perPage, category]);
 
   useEffect(() => {
     load();
@@ -55,11 +58,9 @@ export function HomeProductList() {
   const setParams = (updates: Record<string, string | number>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([k, v]) => {
-      if (String(v) === "" || (k === "page" && Number(v) === 1)) {
-        params.delete(k === "page" ? "page" : k);
-      } else {
-        params.set(k, String(v));
-      }
+      const str = String(v).trim();
+      if (str === "" || (k === "page" && Number(v) === 1)) params.delete(k);
+      else params.set(k, str);
     });
     if (!params.has("page")) params.set("page", "1");
     return `?${params.toString()}`;
