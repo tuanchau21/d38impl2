@@ -94,7 +94,8 @@ export async function listProducts(params: ListProductsParams): Promise<{ produc
     ORDER BY p.updated_at DESC
     LIMIT ? OFFSET ?
   `;
-  const rows = await query<ProductRow[]>(sql, [...values, limit, offset]);
+  // MySQL 8.0.22 + mysql2: pass LIMIT/OFFSET as strings to avoid mysqld_stmt_execute error
+  const rows = await query<ProductRow[]>(sql, [...values, String(limit), String(offset)]);
 
   const productIds = rows.map((r) => r.id);
   let images: ProductImageRow[] = [];
@@ -102,7 +103,7 @@ export async function listProducts(params: ListProductsParams): Promise<{ produc
     const placeholders = productIds.map(() => "?").join(",");
     images = await query<ProductImageRow[]>(
       `SELECT id, product_id, url, sort_order FROM product_images WHERE product_id IN (${placeholders}) ORDER BY product_id, sort_order`,
-      productIds
+      productIds.map((id) => String(id))
     );
   }
 
