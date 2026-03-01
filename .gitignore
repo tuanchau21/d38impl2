@@ -1,28 +1,48 @@
-# Root-level ignores for implementation (frontend + backend)
-# Ensures node_modules and build outputs are never committed when adding from repo root.
+# Dependencies
+node_modules/
 
-# Frontend (Next.js)
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/build/
-frontend/dist/
-frontend/coverage/
+# Next.js
+.next/
+out/
 
-# Backend
-backend/node_modules/
-backend/dist/
-backend/build/
-backend/out/
-backend/coverage/
+# Build / output
+build/
+dist/
+*.tsbuildinfo
 
-# Environment files (any location)
+# Environment (never commit secrets)
 .env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
 
-# Logs and caches
-*.log
+# Testing (Vitest)
+coverage/
+.vitest/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vercel / Turbo (if used later)
+.vercel
+.turbo
+
+# Cache
 .cache/
-.turbo/
-.vercel/
+*.cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

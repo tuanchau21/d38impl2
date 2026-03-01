@@ -5,10 +5,10 @@
 
 import type { Product, ProductsListResponse } from "./types";
 
-/** Server-side (SSR) needs the backend base URL; browser uses same-origin (Nginx proxies /api to backend). */
+/** Server needs an absolute URL for fetch(); client can use relative. */
 const BASE =
   typeof window === "undefined"
-    ? process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:3001"
+    ? process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:3000"
     : "";
 
 function logError(context: string, err: unknown, extra?: Record<string, unknown>): void {
