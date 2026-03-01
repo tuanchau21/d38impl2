@@ -50,14 +50,13 @@ export async function uploadProductImage(
   const client = getClient();
   const ns = namespace();
   const bucketName = bucket();
-  const bucketParam = ns ? `${ns}/${bucketName}` : bucketName;
   // #region agent log
-  debugLog({ location: "storage/upload.ts:before PutObject", message: "uploadProductImage start", data: { productId, key, hasNs: !!ns, bucketName, bucketParamLength: bucketParam.length }, hypothesisId: "H1" });
+  debugLog({ location: "storage/upload.ts:before PutObject", message: "uploadProductImage start", data: { productId, key, hasNs: !!ns, bucketName }, hypothesisId: "H1" });
   // #endregion
   try {
     await client.send(
       new PutObjectCommand({
-        Bucket: bucketParam,
+        Bucket: bucketName,
         Key: key,
         Body: buffer,
         ContentType: contentType,
