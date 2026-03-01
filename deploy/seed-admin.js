@@ -2,9 +2,16 @@
 /**
  * One-time seed: create first admin user (admin-login-design.md).
  * Usage: set env ADMIN_SEED_EMAIL, ADMIN_SEED_PASSWORD and DATABASE_URL (or MYSQL_*), then:
- *   node implementation/deploy/seed-admin.js
- * From repo root. Requires: npm install bcrypt mysql2 (in backend or install here).
+ *   node deploy/seed-admin.js
+ * From repo root. Requires: cd deploy && npm install (once), then run from repo root.
  */
+
+const path = require("path");
+const deployDir = __dirname;
+const deployNodeModules = path.join(deployDir, "node_modules");
+if (require("fs").existsSync(deployNodeModules)) {
+  module.paths.unshift(deployNodeModules);
+}
 
 const bcrypt = require("bcrypt");
 const mysql = require("mysql2/promise");

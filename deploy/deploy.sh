@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 # d38shop — build and restart frontend + backend on Oracle Cloud VM
-# Usage: from repo root (d38shop), run: implementation/deploy/deploy.sh
-# Requires: Node.js, npm, PM2 (npm install -g pm2). .env in implementation/backend (and optionally implementation/frontend).
+# Usage: from repo root, run: deploy/deploy.sh
+# Requires: Node.js, npm, PM2 (npm install -g pm2). .env in backend/ (and optionally frontend/).
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-# Parent of deploy is implementation; parent of that is repo root (d38shop)
-IMPLEMENTATION_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-REPO_ROOT="$(cd "$IMPLEMENTATION_ROOT/.." && pwd)"
-BACKEND_DIR="$IMPLEMENTATION_ROOT/backend"
-FRONTEND_DIR="$IMPLEMENTATION_ROOT/frontend"
+# Parent of deploy is repo root (contains backend/, frontend/, deploy/)
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BACKEND_DIR="$REPO_ROOT/backend"
+FRONTEND_DIR="$REPO_ROOT/frontend"
 
 echo "[deploy] Repo root: $REPO_ROOT"
 
@@ -48,5 +47,5 @@ if command -v pm2 >/dev/null 2>&1; then
   pm2 save
   echo "[deploy] Done. Check: pm2 logs d38shop-backend, pm2 logs d38shop-frontend"
 else
-  echo "[deploy] PM2 not found. Build complete. Run manually: (backend) cd implementation/backend && npm run start; (frontend) cd implementation/frontend && npm run start"
+  echo "[deploy] PM2 not found. Build complete. Run manually: (backend) cd backend && npm run start; (frontend) cd frontend && npm run start"
 fi

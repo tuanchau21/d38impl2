@@ -2,13 +2,20 @@
 /**
  * CLI to create, edit, or remove admin users (users table).
  * DB: DATABASE_URL or MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE.
- * Run from repo root. Requires: bcrypt, mysql2 (e.g. npm install in backend).
+ * Run from repo root. Requires: cd deploy && npm install (once), then run from repo root.
  *
- * Create:  node implementation/deploy/manage-admin-users.js create --email admin@example.com --password secret [--name "Admin"] [--role admin]
- * Edit:    node implementation/deploy/manage-admin-users.js edit --email admin@example.com [--password newpass] [--name "Name"] [--role admin]
- * Remove:  node implementation/deploy/manage-admin-users.js remove --email admin@example.com
- *          node implementation/deploy/manage-admin-users.js remove --id 1
+ * Create:  node deploy/manage-admin-users.js create --email admin@example.com --password secret [--name "Admin"] [--role admin]
+ * Edit:    node deploy/manage-admin-users.js edit --email admin@example.com [--password newpass] [--name "Name"] [--role admin]
+ * Remove:  node deploy/manage-admin-users.js remove --email admin@example.com
+ *          node deploy/manage-admin-users.js remove --id 1
  */
+
+const path = require("path");
+const deployDir = __dirname;
+const deployNodeModules = path.join(deployDir, "node_modules");
+if (require("fs").existsSync(deployNodeModules)) {
+  module.paths.unshift(deployNodeModules);
+}
 
 const bcrypt = require("bcrypt");
 const mysql = require("mysql2/promise");
