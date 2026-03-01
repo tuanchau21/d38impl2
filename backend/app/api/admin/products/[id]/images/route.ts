@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
-import { appendFileSync } from "fs";
 import { requireAdmin } from "@/lib/auth";
 import { getProductByIdOrSlug, getProductImageCount, addProductImages } from "@/lib/db/products";
 import { uploadProductImage } from "@/lib/storage/upload";
 import { randomUUID } from "crypto";
-
-function debugLog(payload: Record<string, unknown>): void {
-  try {
-    appendFileSync("debug-7fe144.log", JSON.stringify({ sessionId: "7fe144", ...payload, timestamp: Date.now() }) + "\n");
-  } catch (_) {}
-}
 
 function logError(context: string, err: unknown): void {
   console.error(`[api/admin/products/[id]/images] ${context}`, { error: err });
@@ -31,21 +24,12 @@ export async function POST(
   if (Number.isNaN(numId)) {
     return NextResponse.json({ error: "Invalid product id" }, { status: 400 });
   }
-  // #region agent log
-  debugLog({ location: "images/route.ts:entry", message: "POST images entry", data: { id, numId }, hypothesisId: "H2" });
-  // #endregion
   try {
     const product = await getProductByIdOrSlug(id);
-    // #region agent log
-    debugLog({ location: "images/route.ts:after getProduct", message: "product lookup done", data: { productFound: !!product, productId: product?.id }, hypothesisId: "H2" });
-    // #endregion
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
     const currentCount = await getProductImageCount(numId);
-    // #region agent log
-    debugLog({ location: "images/route.ts:after getProductImageCount", message: "image count done", data: { currentCount }, hypothesisId: "H2" });
-    // #endregion
     const formData = await request.formData();
     const files = formData.getAll("images");
     const toUpload: { file: File; buffer: Buffer }[] = [];
@@ -67,9 +51,6 @@ export async function POST(
       );
     }
     const urls: { url: string; sort_order: number }[] = [];
-    // #region agent log
-    debugLog({ location: "images/route.ts:before upload loop", message: "starting upload loop", data: { toUploadLength: toUpload.length }, hypothesisId: "H1" });
-    // #endregion
     for (let i = 0; i < toUpload.length; i++) {
       const { file, buffer } = toUpload[i]!;
       const ext = file.name?.split(".").pop()?.toLowerCase() || "webp";
@@ -78,19 +59,9 @@ export async function POST(
       const url = await uploadProductImage(numId, buffer, contentType, keySuffix);
       urls.push({ url, sort_order: i });
     }
-    // #region agent log
-    debugLog({ location: "images/route.ts:after upload loop", message: "upload loop done", data: { urlsLength: urls.length }, hypothesisId: "H1" });
-    // #endregion
     const inserted = await addProductImages(numId, urls);
-    // #region agent log
-    debugLog({ location: "images/route.ts:after addProductImages", message: "addProductImages done", data: { insertedLength: inserted.length }, hypothesisId: "H3" });
-    // #endregion
     return NextResponse.json(inserted);
   } catch (err) {
-    // #region agent log
-    const errObj = err instanceof Error ? { name: err.name, message: err.message, code: (err as { code?: string }).code } : { err: String(err) };
-    debugLog({ location: "images/route.ts:catch", message: "POST upload failed", data: errObj, hypothesisId: "H1-H5" });
-    // #endregion
     logError("POST upload failed", err);
     return NextResponse.json({ error: "Failed to upload images" }, { status: 500 });
   }
