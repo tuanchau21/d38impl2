@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { appendFileSync } from "fs";
 import { requireAdminKey } from "@/lib/auth";
 import { listProducts, createProduct } from "@/lib/db/products";
 
@@ -6,8 +7,25 @@ function logError(context: string, err: unknown): void {
   console.error(`[api/admin/products] ${context}`, { error: err });
 }
 
+function debugLog(payload: Record<string, unknown>): void {
+  try {
+    appendFileSync(
+      "debug-7fe144.log",
+      JSON.stringify({ sessionId: "7fe144", ...payload, timestamp: Date.now() }) + "\n"
+    );
+  } catch (_) {}
+}
+
 export async function GET(request: Request) {
   const auth = requireAdminKey(request);
+  // #region agent log
+  debugLog({
+    location: "app/admin/products/route.ts:GET after auth",
+    message: "auth result (adminKey)",
+    data: { authOk: auth.ok, status: !auth.ok ? auth.status : undefined },
+    hypothesisId: "H1",
+  });
+  // #endregion
   if (!auth.ok) {
     return NextResponse.json(auth.body, { status: auth.status });
   }
@@ -16,13 +34,41 @@ export async function GET(request: Request) {
     const page = searchParams.get("page");
     const limit = searchParams.get("limit");
     const q = searchParams.get("q");
+    // #region agent log
+    debugLog({
+      location: "app/admin/products/route.ts:GET before listProducts",
+      message: "calling listProducts",
+      data: { page, limit, q },
+      hypothesisId: "H2",
+    });
+    // #endregion
     const result = await listProducts({
       page: page ? parseInt(page, 10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
       q: q ?? undefined,
     });
+    // #region agent log
+    debugLog({
+      location: "app/admin/products/route.ts:GET after listProducts",
+      message: "listProducts success",
+      data: { count: result.products.length, total: result.total },
+      hypothesisId: "H2",
+    });
+    // #endregion
     return NextResponse.json({ products: result.products, total: result.total, hasMore: result.hasMore });
   } catch (err) {
+    // #region agent log
+    const errData =
+      err instanceof Error
+        ? { name: err.name, message: err.message, stack: err.stack?.slice(0, 200) }
+        : { err: String(err) };
+    debugLog({
+      location: "app/admin/products/route.ts:GET catch",
+      message: "GET list failed",
+      data: errData,
+      hypothesisId: "H2",
+    });
+    // #endregion
     logError("GET list failed", err);
     const message = err instanceof Error ? err.message : String(err);
     const error = message ? `Failed to list products: ${message}` : "Failed to list products";
