@@ -16,7 +16,9 @@ export function middleware(request: NextRequest) {
   }
 
   if (isLocale(firstSegment)) {
-    const res = NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-next-intl-locale", firstSegment);
+    const res = NextResponse.next({ request: { headers: requestHeaders } });
     res.cookies.set(localeCookieName, firstSegment, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
     return res;
   }
