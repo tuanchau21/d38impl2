@@ -1,9 +1,13 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ProductCard } from "@/components/ProductCard";
 import type { Product } from "@/lib/types";
+
+/** Movement under this (px) is treated as a click and navigates to the product. */
+const CLICK_THRESHOLD = 8;
 
 interface PromotedCarouselProps {
   products: Product[];
@@ -11,8 +15,17 @@ interface PromotedCarouselProps {
 
 export function PromotedCarousel({ products }: PromotedCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] ?? "en";
   /** Drag state in ref to avoid re-renders during drag (smooth scroll per visual-design). */
-  const dragRef = useRef({ startX: 0, scrollLeftStart: 0, active: false });
+  const dragRef = useRef<{
+    startX: number;
+    startY: number;
+    scrollLeftStart: number;
+    active: boolean;
+    productSlug: string | null;
+  }>({ startX: 0, startY: 0, scrollLeftStart: 0, active: false, productSlug: null });
   const [isDragging, setIsDragging] = useState(false);
 
   const scrollBy = useCallback((delta: number) => {
@@ -24,8 +37,12 @@ export function PromotedCarousel({ products }: PromotedCarouselProps) {
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (!scrollRef.current) return;
     const el = e.currentTarget as HTMLElement;
+    const card = (e.target as HTMLElement).closest("[data-product-slug]");
+    const productSlug = card?.getAttribute("data-product-slug") ?? null;
     dragRef.current.startX = e.clientX;
+    dragRef.current.startY = e.clientY;
     dragRef.current.scrollLeftStart = scrollRef.current.scrollLeft;
+    dragRef.current.productSlug = productSlug;
     dragRef.current.active = true;
     setIsDragging(true);
     el.setPointerCapture(e.pointerId);
@@ -38,12 +55,21 @@ export function PromotedCarousel({ products }: PromotedCarouselProps) {
     e.preventDefault();
   }, []);
 
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    const el = e.currentTarget as HTMLElement;
-    dragRef.current.active = false;
-    setIsDragging(false);
-    el.releasePointerCapture(e.pointerId);
-  }, []);
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      const el = e.currentTarget as HTMLElement;
+      const { startX, startY, productSlug } = dragRef.current;
+      const moved = Math.hypot(e.clientX - startX, e.clientY - startY);
+      if (productSlug && moved < CLICK_THRESHOLD) {
+        router.push(`/${locale}/products/${productSlug}`);
+      }
+      dragRef.current.active = false;
+      dragRef.current.productSlug = null;
+      setIsDragging(false);
+      el.releasePointerCapture(e.pointerId);
+    },
+    [locale, router]
+  );
 
   const t = useTranslations("common");
   if (products.length === 0) return null;
@@ -81,7 +107,11 @@ export function PromotedCarousel({ products }: PromotedCarouselProps) {
         onPointerCancel={handlePointerUp}
       >
         {products.map((p) => (
-          <div key={p.id} className="flex-shrink-0 w-[280px] sm:w-[300px]">
+          <div
+            key={p.id}
+            className="flex-shrink-0 w-[280px] sm:w-[300px]"
+            data-product-slug={p.slug || String(p.id)}
+          >
             <ProductCard product={p} className="h-full" showCta />
           </div>
         ))}

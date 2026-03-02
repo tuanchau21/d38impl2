@@ -34,6 +34,7 @@ export function ProductCard({ product, view = "grid", className, showCta }: Prod
     return (
       <Link
         href={href}
+        draggable={false}
         className={`flex gap-4 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow ${className ?? ""}`}
       >
         <div className="w-24 h-24 flex-shrink-0 bg-gray-100 dark:bg-gray-700">
@@ -72,6 +73,7 @@ export function ProductCard({ product, view = "grid", className, showCta }: Prod
   return (
     <Link
       href={href}
+      draggable={false}
       className={`block rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow shadow-sm ${className ?? ""}`}
     >
       <div className="aspect-square bg-gray-100 dark:bg-gray-700 relative">
