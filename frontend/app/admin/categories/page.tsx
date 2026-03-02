@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import {
   getAdminCategories,
   createCategory,
+  updateCategory,
   deleteCategory,
 } from "@/lib/api";
 import type { Category } from "@/lib/types";
@@ -22,6 +23,10 @@ export default function AdminCategoriesPage() {
   const [addParentId, setAddParentId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSlug, setEditSlug] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -64,6 +69,45 @@ export default function AdminCategoriesPage() {
     } catch (err) {
       logError("create category", err);
       setAddError(err instanceof Error ? err.message : "Failed to add category");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const startEdit = (cat: Category) => {
+    setEditingId(cat.id);
+    setEditName(cat.name);
+    setEditSlug(cat.slug);
+    setEditError(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditSlug("");
+    setEditError(null);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingId == null) return;
+    const name = editName.trim();
+    if (!name) {
+      setEditError("Name is required");
+      return;
+    }
+    setSubmitting(true);
+    setEditError(null);
+    try {
+      await updateCategory(editingId, {
+        name,
+        slug: editSlug.trim() || undefined,
+      });
+      cancelEdit();
+      await load();
+    } catch (err) {
+      logError("update category", err);
+      setEditError(err instanceof Error ? err.message : "Failed to update category");
     } finally {
       setSubmitting(false);
     }
@@ -211,24 +255,84 @@ export default function AdminCategoriesPage() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {categories.map((cat) => (
                 <tr key={cat.id}>
-                  <td className="px-4 py-2 text-gray-900 dark:text-white">
-                    {cat.name}
-                  </td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
-                    {cat.slug}
-                  </td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
-                    {parentName(cat.parent_id)}
-                  </td>
-                  <td className="px-4 py-2">
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(cat)}
-                      className="text-red-600 dark:text-red-400 hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </td>
+                  {editingId === cat.id ? (
+                    <>
+                      <td colSpan={4} className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50">
+                        <form
+                          onSubmit={handleEditSubmit}
+                          className="flex flex-wrap gap-3 items-end"
+                        >
+                          {editError && (
+                            <p className="w-full text-red-600 dark:text-red-400 text-sm" role="alert">
+                              {editError}
+                            </p>
+                          )}
+                          <label className="flex flex-col gap-1">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">Name</span>
+                            <input
+                              type="text"
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-48"
+                              placeholder="Category name"
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">Slug</span>
+                            <input
+                              type="text"
+                              value={editSlug}
+                              onChange={(e) => setEditSlug(e.target.value)}
+                              className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-40"
+                              placeholder="url-slug"
+                            />
+                          </label>
+                          <button
+                            type="submit"
+                            disabled={submitting}
+                            className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:opacity-90 disabled:opacity-50"
+                          >
+                            {submitting ? "Saving…" : "Save"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Cancel
+                          </button>
+                        </form>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-2 text-gray-900 dark:text-white">
+                        {cat.name}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                        {cat.slug}
+                      </td>
+                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                        {parentName(cat.parent_id)}
+                      </td>
+                      <td className="px-4 py-2">
+                        <button
+                          type="button"
+                          onClick={() => startEdit(cat)}
+                          className="text-indigo-600 dark:text-indigo-400 hover:underline mr-2"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(cat)}
+                          className="text-red-600 dark:text-red-400 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>

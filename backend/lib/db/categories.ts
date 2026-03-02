@@ -90,6 +90,37 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   return row ? rowToCategory(row) : null;
 }
 
+export interface UpdateCategoryData {
+  name: string;
+  slug?: string;
+}
+
+/** Update category name and optionally slug (admin-high-level-design §7). */
+export async function updateCategory(
+  id: number,
+  data: UpdateCategoryData
+): Promise<Category | null> {
+  const name = data.name.trim();
+  if (!name) {
+    throw new Error("name is required");
+  }
+  let slug = data.slug?.trim() || slugFromName(name) || "category";
+  const existing = await getCategoryById(id);
+  if (!existing) return null;
+  const existingBySlug = await getCategoryBySlug(slug);
+  if (existingBySlug && existingBySlug.id !== id) {
+    let suffix = 1;
+    while (await getCategoryBySlug(`${slug}-${suffix}`)) suffix++;
+    slug = `${slug}-${suffix}`;
+  }
+  await query("UPDATE categories SET name = ?, slug = ? WHERE id = ?", [
+    name,
+    slug,
+    id,
+  ]);
+  return getCategoryById(id);
+}
+
 /** Count products that reference this category (admin-high-level-design §7: delete allowed only if 0). */
 export async function countProductsByCategoryId(categoryId: number): Promise<number> {
   const result = await query<{ count: number }[]>(

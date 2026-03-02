@@ -2,8 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getAdminProducts, deleteProduct } from "@/lib/api";
-import type { Product } from "@/lib/types";
+import {
+  getAdminProducts,
+  getAdminCategories,
+  updateProduct,
+  deleteProduct,
+} from "@/lib/api";
+import type { Product, Category } from "@/lib/types";
 
 function logError(context: string, err: unknown): void {
   console.error(`[admin-products] ${context}`, { error: err });
@@ -11,17 +16,22 @@ function logError(context: string, err: unknown): void {
 
 export function AdminProductList() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAdminProducts({ q: search || undefined });
-      const list = data.products ?? [];
-      setProducts(list);
+      const [data, catList] = await Promise.all([
+        getAdminProducts({ q: search || undefined }),
+        getAdminCategories(),
+      ]);
+      setProducts(data.products ?? []);
+      setCategories(catList);
     } catch (err) {
       logError("load products", err);
       setError(err instanceof Error ? err.message : "Failed to load products");
@@ -33,6 +43,42 @@ export function AdminProductList() {
   useEffect(() => {
     load();
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handlePromotedToggle = async (p: Product) => {
+    setUpdatingId(p.id);
+    setError(null);
+    try {
+      const updated = await updateProduct(p.id, {
+        is_promoted: !p.is_promoted,
+      });
+      setProducts((prev) =>
+        prev.map((x) => (x.id === p.id ? { ...x, is_promoted: updated.is_promoted } : x))
+      );
+    } catch (err) {
+      logError("update promoted", err);
+      setError(err instanceof Error ? err.message : "Update failed");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleCategoryChange = async (p: Product, categoryId: number | null) => {
+    setUpdatingId(p.id);
+    setError(null);
+    try {
+      const updated = await updateProduct(p.id, { category_id: categoryId });
+      setProducts((prev) =>
+        prev.map((x) =>
+          x.id === p.id ? { ...x, category_id: updated.category_id, category: updated.category } : x
+        )
+      );
+    } catch (err) {
+      logError("update category", err);
+      setError(err instanceof Error ? err.message : "Update failed");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const handleDelete = async (p: Product) => {
     if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
@@ -98,11 +144,50 @@ export function AdminProductList() {
                   </td>
                   <td className="px-4 py-2">{p.name}</td>
                   <td className="px-4 py-2">{p.sku}</td>
-                  <td className="px-4 py-2">{p.category?.name ?? "—"}</td>
+                  <td className="px-4 py-2">
+                    <select
+                      value={p.category_id == null || p.category_id === 0 ? "" : p.category_id}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        handleCategoryChange(p, v === "" ? null : parseInt(v, 10));
+                      }}
+                      disabled={updatingId === p.id}
+                      className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm min-w-[120px] disabled:opacity-50"
+                      aria-label={`Category for ${p.name}`}
+                    >
+                      <option value="">(None)</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="px-4 py-2">${p.price.toFixed(2)}</td>
                   <td className="px-4 py-2">{p.discount_percent ? `${p.discount_percent}%` : "—"}</td>
                   <td className="px-4 py-2">{p.quantity_per_box}</td>
-                  <td className="px-4 py-2">{p.is_promoted ? "Yes" : "No"}</td>
+                  <td className="px-4 py-2">
+                    <button
+                      type="button"
+                      onClick={() => handlePromotedToggle(p)}
+                      disabled={updatingId === p.id}
+                      role="switch"
+                      aria-checked={p.is_promoted}
+                      aria-label={p.is_promoted ? "Promoted; click to unset" : "Not promoted; click to set"}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                        p.is_promoted
+                          ? "bg-indigo-600"
+                          : "bg-gray-200 dark:bg-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition ${
+                          p.is_promoted ? "translate-x-5" : "translate-x-1"
+                        }`}
+                        aria-hidden
+                      />
+                    </button>
+                  </td>
                   <td className="px-4 py-2">
                     <Link
                       href={`/admin/products/${p.id}/edit`}

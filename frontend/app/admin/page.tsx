@@ -9,12 +9,20 @@ export default function AdminDashboardPage() {
       <p className="text-gray-600 dark:text-gray-300 mb-6">
         Manage products and content. No user management in this version.
       </p>
-      <Link
-        href="/admin/products"
-        className="inline-block px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium hover:opacity-90"
-      >
-        Manage products
-      </Link>
+      <div className="flex gap-3">
+        <Link
+          href="/admin/products"
+          className="inline-block px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium hover:opacity-90 shadow-sm"
+        >
+          Manage products
+        </Link>
+        <Link
+          href="/admin/products/new"
+          className="inline-block px-4 py-2 rounded-xl bg-indigo-600 text-white font-medium hover:opacity-90 shadow-sm"
+        >
+          Add product
+        </Link>
+      </div>
     </div>
   );
 }

@@ -155,6 +155,30 @@ export async function createCategory(
   }
 }
 
+/** Update category (PUT /api/admin/categories/:id). Body: name (required), slug? (admin-high-level-design §7). */
+export async function updateCategory(
+  id: number,
+  body: { name: string; slug?: string },
+  options: { signal?: AbortSignal; adminKey?: string } = {}
+): Promise<Category> {
+  const url = `${BASE}/api/admin/categories/${id}`;
+  const headers: HeadersInit = { "Content-Type": "application/json" };
+  if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
+  try {
+    return await fetchJson<Category>(
+      url,
+      { method: "PUT", headers, body: JSON.stringify(body), ...ADMIN_CREDENTIALS },
+      options.signal
+    );
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("updateCategory", { url });
+      throw err;
+    }
+    throw err;
+  }
+}
+
 /** Delete category (DELETE /api/admin/categories/:id). Throws with message on 409 (in use). */
 export async function deleteCategory(
   id: number,
