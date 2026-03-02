@@ -51,6 +51,13 @@ CREATE TABLE IF NOT EXISTS sku_counter (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT IGNORE INTO sku_counter (id, value) VALUES (1, 1);
 
+-- settings: key-value for shop-level settings (e.g. shop_name). database-high-level-design §2.1.
+CREATE TABLE IF NOT EXISTS settings (
+    k VARCHAR(64) NOT NULL PRIMARY KEY,
+    v TEXT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT IGNORE INTO settings (k, v) VALUES ('shop_name', 'Bulk Shoe Shop');
+
 -- -----------------------------------------------------------------------------
 -- Future expansion placeholders (no implementation in v1)
 -- -----------------------------------------------------------------------------

@@ -43,6 +43,7 @@ export function ProductCard({ product, view = "grid", className, showCta }: Prod
             <img
               src={imageUrl}
               alt={product.name}
+              draggable={false}
               className="w-full h-full object-cover"
               loading="lazy"
               sizes="96px"
@@ -82,6 +83,7 @@ export function ProductCard({ product, view = "grid", className, showCta }: Prod
           <img
             src={imageUrl}
             alt={product.name}
+            draggable={false}
             className="w-full h-full object-cover"
             loading="lazy"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

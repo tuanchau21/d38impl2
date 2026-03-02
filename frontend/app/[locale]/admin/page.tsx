@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { AdminShopNameForm } from "@/components/admin/AdminShopNameForm";
 
 export default async function AdminDashboardPage({
   params,
@@ -14,6 +15,12 @@ export default async function AdminDashboardPage({
       <p className="text-gray-600 dark:text-gray-300 mb-6">
         {t("manageDescription")}
       </p>
+      <section className="mb-8" aria-labelledby="shop-settings-heading">
+        <h2 id="shop-settings-heading" className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          {t("shopNameLabel")}
+        </h2>
+        <AdminShopNameForm />
+      </section>
       <div className="flex gap-3">
         <Link
           href={`/${locale}/admin/products`}

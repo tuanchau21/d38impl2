@@ -229,6 +229,66 @@ export async function getPromoted(signal?: AbortSignal): Promise<Product[]> {
   }
 }
 
+export interface ShopSettings {
+  shop_name: string;
+}
+
+export async function getSettings(signal?: AbortSignal): Promise<ShopSettings> {
+  const url = `${BASE}/api/settings`;
+  try {
+    return await fetchJson<ShopSettings>(url, {}, signal);
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("getSettings", { url });
+      throw err;
+    }
+    throw err;
+  }
+}
+
+export async function getAdminSettings(
+  options: { signal?: AbortSignal; adminKey?: string } = {}
+): Promise<ShopSettings> {
+  const url = `${BASE}/api/admin/settings`;
+  const headers: HeadersInit = {};
+  if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
+  try {
+    return await fetchJson<ShopSettings>(url, { headers, ...ADMIN_CREDENTIALS }, options.signal);
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("getAdminSettings", { url });
+      throw err;
+    }
+    logError("getAdminSettings failed", err, { url });
+    throw err;
+  }
+}
+
+export async function updateAdminSettings(
+  body: { shop_name?: string },
+  options: { signal?: AbortSignal; adminKey?: string } = {}
+): Promise<ShopSettings> {
+  const url = `${BASE}/api/admin/settings`;
+  const headers: HeadersInit = { "Content-Type": "application/json" };
+  if (options.adminKey) headers["X-Admin-Key"] = options.adminKey;
+  try {
+    return await fetchJson<ShopSettings>(url, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(body),
+      ...ADMIN_CREDENTIALS,
+      signal: options.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      logCancel("updateAdminSettings", { url });
+      throw err;
+    }
+    logError("updateAdminSettings failed", err, { url });
+    throw err;
+  }
+}
+
 // Auth (admin-high-level-design.md §5). credentials: include for session cookie.
 export async function getAuthMe(signal?: AbortSignal): Promise<AdminUser> {
   const url = `${BASE}/api/auth/me`;
