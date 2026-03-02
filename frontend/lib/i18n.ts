@@ -7,10 +7,18 @@ export const defaultLocale = "en" as const;
 
 export type LocaleCode = "en" | "de";
 
+/** Country code for country-flag-icons (ISO 3166-1 alpha-2). Used for flag icon in header. */
+export type FlagCountryCode = "GB" | "DE";
+
 /** Locales that have a corresponding messages/{code}.json file. */
-export const availableLocales: { code: LocaleCode; label: string }[] = [
-  { code: "en", label: "English" },
-  { code: "de", label: "Deutsch" },
+export const availableLocales: {
+  code: LocaleCode;
+  label: string;
+  shortLabel: string;
+  flagCode: FlagCountryCode;
+}[] = [
+  { code: "en", label: "English", shortLabel: "EN", flagCode: "GB" },
+  { code: "de", label: "Deutsch", shortLabel: "DE", flagCode: "DE" },
 ];
 
 export const localeCodes: LocaleCode[] = availableLocales.map((l) => l.code);

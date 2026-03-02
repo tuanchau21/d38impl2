@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useState } from "react";
-import { availableLocales, type LocaleCode } from "@/lib/i18n";
+import * as FlagIcons from "country-flag-icons/react/3x2";
+import { availableLocales, type LocaleCode, type FlagCountryCode } from "@/lib/i18n";
 
 interface HeaderProps {
   locale: LocaleCode;
@@ -12,17 +12,6 @@ interface HeaderProps {
 export function Header({ locale }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (q) {
-      router.push(`/${locale}/catalog?q=${encodeURIComponent(q)}`);
-    } else {
-      router.push(`/${locale}/catalog`);
-    }
-  };
 
   const switchLocale = (newLocale: LocaleCode) => {
     if (newLocale === locale) return;
@@ -54,22 +43,6 @@ export function Header({ locale }: HeaderProps) {
           >
             Promotions
           </Link>
-          <form onSubmit={handleSearch} role="search" className="flex gap-1">
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search..."
-              aria-label="Search products"
-              className="w-28 sm:w-36 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm"
-            />
-            <button
-              type="submit"
-              className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
-            >
-              Search
-            </button>
-          </form>
           <Link
             href={`/${locale}/admin`}
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
@@ -83,24 +56,36 @@ export function Header({ locale }: HeaderProps) {
           <span className="text-gray-400 dark:text-gray-500 text-sm cursor-not-allowed" title="Coming later">
             Cart
           </span>
-          {/* Language selector: separate button per language (from available translation files) */}
+          {/* Language selector: short code + flag icon (country-flag-icons) per translation file */}
           <div className="flex items-center gap-1" role="group" aria-label="Language">
-            {availableLocales.map((l) => (
-              <button
-                key={l.code}
-                type="button"
-                onClick={() => switchLocale(l.code)}
-                aria-current={l.code === locale ? "true" : undefined}
-                aria-label={`Switch to ${l.label}`}
-                className={`px-2 py-1.5 rounded text-sm ${
-                  l.code === locale
-                    ? "font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent"
-                }`}
-              >
-                {l.label}
-              </button>
-            ))}
+            {availableLocales.map((l) => {
+              const FlagComponent = FlagIcons[l.flagCode as keyof typeof FlagIcons] as
+                | React.ComponentType<{ className?: string; title?: string }>
+                | undefined;
+              return (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => switchLocale(l.code)}
+                  aria-current={l.code === locale ? "true" : undefined}
+                  aria-label={`Switch to ${l.label}`}
+                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-sm ${
+                    l.code === locale
+                      ? "font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent"
+                  }`}
+                >
+                  {FlagComponent != null && (
+                    <FlagComponent
+                      className="w-5 h-[calc(10/3*1rem)] shrink-0"
+                      title={l.label}
+                      aria-hidden
+                    />
+                  )}
+                  <span>{l.shortLabel}</span>
+                </button>
+              );
+            })}
           </div>
         </nav>
       </div>
