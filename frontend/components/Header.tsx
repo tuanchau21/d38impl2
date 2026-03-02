@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import * as FlagIcons from "country-flag-icons/react/3x2";
 import { availableLocales, localeCookieName, type LocaleCode, type FlagCountryCode } from "@/lib/i18n";
+import { SITE_NAME } from "@/lib/site";
 
 function setLocaleCookie(locale: LocaleCode) {
   document.cookie = `${localeCookieName}=${locale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
@@ -35,7 +36,7 @@ export function Header({ locale }: HeaderProps) {
           href={`/${locale}`}
           className="font-semibold text-lg text-gray-900 dark:text-white shrink-0"
         >
-          {t("siteName")}
+          {SITE_NAME}
         </Link>
         <nav className="flex items-center gap-3 sm:gap-6 flex-1 justify-end flex-wrap">
           <Link

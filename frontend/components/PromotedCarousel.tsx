@@ -11,9 +11,9 @@ interface PromotedCarouselProps {
 
 export function PromotedCarousel({ products }: PromotedCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  /** Drag state in ref to avoid re-renders during drag (smooth scroll per visual-design). */
+  const dragRef = useRef({ startX: 0, scrollLeftStart: 0, active: false });
   const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeftStart, setScrollLeftStart] = useState(0);
 
   const scrollBy = useCallback((delta: number) => {
     if (scrollRef.current) {
@@ -21,29 +21,28 @@ export function PromotedCarousel({ products }: PromotedCarouselProps) {
     }
   }, []);
 
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      if (!scrollRef.current) return;
-      setIsDragging(true);
-      setStartX(e.clientX);
-      setScrollLeftStart(scrollRef.current.scrollLeft);
-      (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    },
-    []
-  );
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (!scrollRef.current) return;
+    const el = e.currentTarget as HTMLElement;
+    dragRef.current.startX = e.clientX;
+    dragRef.current.scrollLeftStart = scrollRef.current.scrollLeft;
+    dragRef.current.active = true;
+    setIsDragging(true);
+    el.setPointerCapture(e.pointerId);
+  }, []);
 
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!isDragging || !scrollRef.current) return;
-      const dx = e.clientX - startX;
-      scrollRef.current.scrollLeft = scrollLeftStart - dx;
-    },
-    [isDragging, startX, scrollLeftStart]
-  );
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragRef.current.active || !scrollRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    scrollRef.current.scrollLeft = dragRef.current.scrollLeftStart - dx;
+    e.preventDefault();
+  }, []);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    const el = e.currentTarget as HTMLElement;
+    dragRef.current.active = false;
     setIsDragging(false);
-    (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+    el.releasePointerCapture(e.pointerId);
   }, []);
 
   const t = useTranslations("common");
@@ -75,11 +74,11 @@ export function PromotedCarousel({ products }: PromotedCarouselProps) {
       </button>
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={`flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 select-none touch-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
         {products.map((p) => (
           <div key={p.id} className="flex-shrink-0 w-[280px] sm:w-[300px]">
