@@ -293,7 +293,6 @@ export async function getAdminProducts(
 export async function createProduct(
   body: Partial<{
     name: string;
-    sku: string;
     category_id: number | null;
     description: string;
     price: number;
@@ -325,7 +324,6 @@ export async function updateProduct(
   id: number,
   body: Partial<{
     name: string;
-    sku: string;
     category_id: number | null;
     description: string;
     price: number;

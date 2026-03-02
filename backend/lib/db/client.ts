@@ -50,3 +50,23 @@ export async function insertAndGetId(sql: string, params: unknown[]): Promise<nu
     throw err;
   }
 }
+
+export type TransactionCallback<T> = (conn: mysql.PoolConnection) => Promise<T>;
+
+/** Run a callback inside a transaction. Commits on success, rolls back on throw. */
+export async function withTransaction<T>(fn: TransactionCallback<T>): Promise<T> {
+  const p = getPool();
+  const conn = await p.getConnection();
+  try {
+    await conn.beginTransaction();
+    const result = await fn(conn);
+    await conn.commit();
+    return result;
+  } catch (err) {
+    await conn.rollback();
+    logError("transaction failed", err);
+    throw err;
+  } finally {
+    conn.release();
+  }
+}

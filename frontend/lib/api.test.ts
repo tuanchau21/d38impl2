@@ -211,7 +211,7 @@ describe("lib/api", () => {
       } as Response);
 
       await createProduct(
-        { name: "New Shoe", sku: "SKU-2", price: 50 },
+        { name: "New Shoe", price: 50 },
         { adminKey: "key" }
       );
 
@@ -223,7 +223,7 @@ describe("lib/api", () => {
             "Content-Type": "application/json",
             "X-Admin-Key": "key",
           },
-          body: JSON.stringify({ name: "New Shoe", sku: "SKU-2", price: 50 }),
+          body: JSON.stringify({ name: "New Shoe", price: 50 }),
         })
       );
     });

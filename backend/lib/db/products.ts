@@ -1,9 +1,12 @@
 /**
  * Product and product_images queries. Schema: deploy/schema.sql, high-level-plan §5.3.
+ * SKU is generated from sku_counter (product-data-layout.md).
  */
 
-import { query, insertAndGetId } from "./client";
+import { query, insertAndGetId, withTransaction } from "./client";
+import { counterToSku } from "@/lib/sku";
 import type { Product, ProductImage } from "@/lib/types";
+import type { RowDataPacket, ResultSetHeader } from "mysql2/promise";
 
 const MAX_LIMIT = 100;
 const DEFAULT_LIMIT = 24;
@@ -147,7 +150,6 @@ export async function getProductByIdOrSlug(idOrSlug: string): Promise<Product | 
 
 export async function createProduct(data: {
   name: string;
-  sku: string;
   category_id?: number | null;
   description?: string | null;
   price: number;
@@ -156,30 +158,45 @@ export async function createProduct(data: {
   is_promoted?: boolean;
 }): Promise<Product> {
   const slug = data.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-  const sql = `
-    INSERT INTO products (category_id, sku, name, slug, description, price, discount_percent, quantity_per_box, is_promoted)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  const id = await insertAndGetId(sql, [
-    data.category_id ?? null,
-    data.sku,
-    data.name,
-    slug,
-    data.description ?? null,
-    data.price,
-    data.discount_percent ?? 0,
-    data.quantity_per_box,
-    data.is_promoted ? 1 : 0,
-  ]);
-  const row = await query<ProductRow[]>("SELECT id, category_id, sku, name, slug, description, price, discount_percent, quantity_per_box, is_promoted, created_at, updated_at FROM products WHERE id = ?", [id]);
-  return rowToProduct(row[0]!, []);
+
+  return withTransaction(async (conn) => {
+    const [counterRows] = await conn.execute<RowDataPacket[]>(
+      "SELECT value FROM sku_counter WHERE id = 1 FOR UPDATE"
+    );
+    const counterValue = Number(counterRows[0]?.value ?? 0);
+    const sku = counterToSku(counterValue);
+
+    await conn.execute("UPDATE sku_counter SET value = value + 1 WHERE id = 1");
+
+    const insertSql = `
+      INSERT INTO products (category_id, sku, name, slug, description, price, discount_percent, quantity_per_box, is_promoted)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const [insertResult] = await conn.execute<ResultSetHeader>(insertSql, [
+      data.category_id ?? null,
+      sku,
+      data.name,
+      slug,
+      data.description ?? null,
+      data.price,
+      data.discount_percent ?? 0,
+      data.quantity_per_box,
+      data.is_promoted ? 1 : 0,
+    ]);
+    const id = insertResult.insertId;
+
+    const [rows] = await conn.execute<RowDataPacket[]>(
+      "SELECT id, category_id, sku, name, slug, description, price, discount_percent, quantity_per_box, is_promoted, created_at, updated_at FROM products WHERE id = ?",
+      [id]
+    );
+    return rowToProduct(rows[0] as ProductRow, []);
+  });
 }
 
 export async function updateProduct(
   id: number,
   data: Partial<{
     name: string;
-    sku: string;
     category_id: number | null;
     description: string | null;
     price: number;
@@ -199,10 +216,6 @@ export async function updateProduct(
     const slug = data.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     updates.push("slug = ?");
     values.push(slug);
-  }
-  if (data.sku != null) {
-    updates.push("sku = ?");
-    values.push(data.sku);
   }
   if (data.category_id !== undefined) {
     updates.push("category_id = ?");

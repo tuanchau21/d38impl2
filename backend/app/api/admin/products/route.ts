@@ -38,14 +38,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const name = body?.name;
-    const sku = body?.sku;
     const price = body?.price != null ? Number(body.price) : undefined;
     const quantity_per_box = body?.quantity_per_box != null ? Number(body.quantity_per_box) : undefined;
     if (!name || typeof name !== "string" || name.trim() === "") {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
-    }
-    if (!sku || typeof sku !== "string" || sku.trim() === "") {
-      return NextResponse.json({ error: "sku is required" }, { status: 400 });
     }
     if (price == null || Number.isNaN(price) || price < 0) {
       return NextResponse.json({ error: "price must be a non-negative number" }, { status: 400 });
@@ -59,7 +55,6 @@ export async function POST(request: Request) {
     }
     const product = await createProduct({
       name: name.trim(),
-      sku: sku.trim(),
       category_id: body?.category_id ?? null,
       description: body?.description ?? null,
       price,

@@ -52,6 +52,10 @@ const EXPECTED_SCHEMA = {
     { name: "url", type: "varchar" },
     { name: "sort_order", type: "int" },
   ],
+  sku_counter: [
+    { name: "id", type: "tinyint" },
+    { name: "value", type: "int" },
+  ],
   users: [
     { name: "id", type: "int" },
     { name: "email", type: "varchar" },

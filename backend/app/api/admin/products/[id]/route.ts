@@ -31,7 +31,6 @@ export async function PUT(
     }
     const product = await updateProduct(numId, {
       name: body?.name,
-      sku: body?.sku,
       category_id: body?.category_id,
       description: body?.description,
       price,

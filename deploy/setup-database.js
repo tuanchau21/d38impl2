@@ -28,6 +28,7 @@ const REQUIRED_TABLES = [
   "categories",
   "products",
   "product_images",
+  "sku_counter",
   "users",
   "admin_users",
   "sessions",
@@ -35,6 +36,9 @@ const REQUIRED_TABLES = [
   "order_items",
   "payments",
 ];
+
+/** Migrations that are safe to run on existing DBs (idempotent, additive only). Run after schema. */
+const SAFE_MIGRATIONS = ["003_sku_counter.sql"];
 
 function getConnOpts(includeDatabase = true) {
   const opts = {
@@ -86,6 +90,19 @@ async function applySchema(conn) {
   console.log("Schema applied: deploy/schema.sql");
 }
 
+async function applyMigrations(conn) {
+  const migrationsDir = path.join(deployDir, "migrations");
+  if (!fs.existsSync(migrationsDir)) return;
+
+  for (const name of SAFE_MIGRATIONS) {
+    const filePath = path.join(migrationsDir, name);
+    if (!fs.existsSync(filePath)) continue;
+    const sql = fs.readFileSync(filePath, "utf8");
+    await conn.query({ sql, multipleStatements: true });
+    console.log("Migration applied:", name);
+  }
+}
+
 async function verify(conn) {
   const [rows] = await conn.query("SHOW TABLES");
   const db = (process.env.MYSQL_DATABASE || "d38shop").trim();
@@ -122,6 +139,7 @@ async function main() {
 
   try {
     await applySchema(conn);
+    await applyMigrations(conn);
     await verify(conn);
     console.log("Database setup complete.");
   } catch (err) {

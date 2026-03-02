@@ -52,7 +52,6 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
     product?.category_id != null && product.category_id !== 0 ? product.category_id : ""
   );
   const [name, setName] = useState(product?.name ?? "");
-  const [sku, setSku] = useState(product?.sku ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [price, setPrice] = useState(product?.price?.toString() ?? "");
   const [discountPercent, setDiscountPercent] = useState(
@@ -124,7 +123,6 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
     try {
       const payload = {
         name,
-        sku,
         category_id: categoryId === "" ? null : (categoryId as number),
         description: description || undefined,
         price: priceStringToNumber(price),
@@ -171,14 +169,15 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       </div>
       <div>
         <label htmlFor="sku" className="block text-sm font-medium mb-1">
-          SKU *
+          SKU
         </label>
         <input
           id="sku"
-          required
-          value={sku}
-          onChange={(e) => setSku(e.target.value)}
-          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
+          type="text"
+          readOnly
+          value={isEdit && product?.sku ? product.sku : "Generated on save"}
+          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 px-3 py-2 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+          aria-label="SKU (system-generated, read-only)"
         />
       </div>
       <div>
