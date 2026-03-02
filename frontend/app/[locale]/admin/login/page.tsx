@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { login } from "@/lib/api";
 
 function logError(context: string, err: unknown): void {
@@ -10,6 +11,7 @@ function logError(context: string, err: unknown): void {
 }
 
 function AdminLoginForm() {
+  const t = useTranslations("admin");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -30,7 +32,7 @@ function AdminLoginForm() {
       router.refresh();
     } catch (err) {
       logError("login failed", err);
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : t("loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -40,15 +42,15 @@ function AdminLoginForm() {
     <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Admin login
+          {t("login")}
         </h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
-          Sign in to manage products and content.
+          {t("signInDescription")}
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email
+              {t("email")}
             </label>
             <input
               id="email"
@@ -62,7 +64,7 @@ function AdminLoginForm() {
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Password
+              {t("password")}
             </label>
             <input
               id="password"
@@ -84,12 +86,12 @@ function AdminLoginForm() {
             disabled={loading}
             className="w-full px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium hover:opacity-90 disabled:opacity-50"
           >
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? t("signingIn") : t("signIn")}
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
           <Link href={`/${locale}`} className="hover:underline">
-            Back to shop
+            {t("backToShop")}
           </Link>
         </p>
       </div>

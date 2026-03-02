@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { Product } from "@/lib/types";
 
 export type ProductCardView = "grid" | "list";
@@ -16,6 +17,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, view = "grid", className, showCta }: ProductCardProps) {
+  const t = useTranslations("common");
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] ?? "en";
   const imageUrl = product.images?.[0]?.url ?? null;
@@ -46,7 +48,7 @@ export function ProductCard({ product, view = "grid", className, showCta }: Prod
             />
           ) : (
             <span className="flex items-center justify-center w-full h-full text-gray-400 text-xs">
-              No image
+              {t("noImage")}
             </span>
           )}
         </div>
@@ -59,7 +61,7 @@ export function ProductCard({ product, view = "grid", className, showCta }: Prod
               <span className="text-xs text-gray-500 line-through">${product.price.toFixed(2)}</span>
             )}
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {product.quantity_per_box} per box
+              {product.quantity_per_box} {t("perBox")}
             </span>
           </div>
         </div>
@@ -84,12 +86,12 @@ export function ProductCard({ product, view = "grid", className, showCta }: Prod
           />
         ) : (
           <span className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-            No image
+            {t("noImage")}
           </span>
         )}
         {product.is_promoted && (
           <span className="absolute top-2 left-2 bg-amber-500 text-white text-xs font-medium px-2 py-0.5 rounded">
-            Promoted
+            {t("promoted")}
           </span>
         )}
       </div>
@@ -103,11 +105,11 @@ export function ProductCard({ product, view = "grid", className, showCta }: Prod
           )}
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {product.quantity_per_box} per box
+          {product.quantity_per_box} {t("perBox")}
         </p>
         {showCta && (
           <span className="mt-2 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
-            View details →
+            {t("viewDetails")} →
           </span>
         )}
       </div>

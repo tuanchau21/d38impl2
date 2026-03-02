@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { logout } from "@/lib/api";
 import { useAdminUser } from "./AdminAuthContext";
 
@@ -21,6 +22,7 @@ function navLink(path: string, label: string, active: boolean) {
 }
 
 export function AdminSidebar() {
+  const t = useTranslations("admin");
   const pathname = usePathname();
   const router = useRouter();
   const user = useAdminUser();
@@ -47,15 +49,15 @@ export function AdminSidebar() {
   return (
     <aside className="w-56 border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex-shrink-0 flex flex-col">
       <nav className="p-4 space-y-1 flex-1">
-        {navLink(base, "Dashboard", isDashboard)}
-        {navLink(`${base}/products`, "Products", isProducts)}
-        {navLink(`${base}/categories`, "Categories", isCategories)}
+        {navLink(base, t("dashboard"), isDashboard)}
+        {navLink(`${base}/products`, t("products"), isProducts)}
+        {navLink(`${base}/categories`, t("categories"), isCategories)}
         {/* Placeholders for future: Orders, Users (admin-high-level-design.md §3) */}
         <span className="block px-3 py-2 text-gray-400 dark:text-gray-500 text-sm">
-          Orders (later)
+          {t("ordersLater")}
         </span>
         <span className="block px-3 py-2 text-gray-400 dark:text-gray-500 text-sm">
-          Users (later)
+          {t("usersLater")}
         </span>
       </nav>
       {user && (
@@ -68,7 +70,7 @@ export function AdminSidebar() {
             onClick={handleLogout}
             className="mt-1 text-sm text-gray-500 dark:text-gray-400 hover:underline"
           >
-            Logout
+            {t("logout")}
           </button>
         </div>
       )}

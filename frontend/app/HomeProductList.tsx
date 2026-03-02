@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { getProducts } from "@/lib/api";
 import { ProductCard, type ProductCardView } from "@/components/ProductCard";
 import type { Product } from "@/lib/types";
@@ -13,6 +14,9 @@ function logError(context: string, err: unknown): void {
 }
 
 export function HomeProductList() {
+  const t = useTranslations("home");
+  const tCommon = useTranslations("common");
+  const tCatalog = useTranslations("catalog");
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
@@ -41,11 +45,11 @@ export function HomeProductList() {
       setTotal(data.total ?? data.products?.length ?? 0);
     } catch (err) {
       logError("load products", err);
-      setError(err instanceof Error ? err.message : "Failed to load products");
+      setError(err instanceof Error ? err.message : tCommon("errorLoadProducts"));
     } finally {
       setLoading(false);
     }
-  }, [page, perPage, category]);
+  }, [page, perPage, category, tCommon]);
 
   useEffect(() => {
     load();
@@ -70,26 +74,26 @@ export function HomeProductList() {
     <section className="mb-10">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          All products
+          {t("allProducts")}
         </h2>
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm text-gray-600 dark:text-gray-400">View:</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{tCommon("view")}</span>
           <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
             <a
               href={setParams({ view: "grid", page: 1 })}
               className={`px-3 py-1.5 text-sm ${view === "grid" ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
             >
-              Grid
+              {tCommon("grid")}
             </a>
             <a
               href={setParams({ view: "list", page: 1 })}
               className={`px-3 py-1.5 text-sm ${view === "list" ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
             >
-              List
+              {tCommon("list")}
             </a>
           </div>
           <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-            Per page:
+            {tCommon("perPage")}
             <select
               value={perPage}
               onChange={(e) => {
@@ -118,7 +122,7 @@ export function HomeProductList() {
       )}
 
       {loading ? (
-        <p className="text-gray-500 py-8">Loading…</p>
+        <p className="text-gray-500 py-8">{tCommon("loading")}</p>
       ) : (
         <>
           {view === "list" ? (
@@ -138,7 +142,7 @@ export function HomeProductList() {
           )}
 
           {!loading && products.length === 0 && (
-            <p className="text-gray-500 py-8">No products found.</p>
+            <p className="text-gray-500 py-8">{tCatalog("noProducts")}</p>
           )}
 
           {totalPages > 1 && (
@@ -147,14 +151,14 @@ export function HomeProductList() {
               aria-label="Pagination"
             >
               <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">
-                Page <span className="font-medium text-indigo-600 dark:text-indigo-400">{page}</span> of {totalPages}
+                {tCatalog("pageOf", { page, total: totalPages })}
               </span>
               {hasPrev && (
                 <a
                   href={setParams({ page: page - 1 })}
                   className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
                 >
-                  Previous
+                  {tCommon("previous")}
                 </a>
               )}
               {hasNext && (
@@ -162,7 +166,7 @@ export function HomeProductList() {
                   href={setParams({ page: page + 1 })}
                   className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
                 >
-                  Next
+                  {tCommon("next")}
                 </a>
               )}
             </nav>

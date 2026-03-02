@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { getProducts, getCategories } from "@/lib/api";
 import { ProductCard, type ProductCardView } from "@/components/ProductCard";
 import type { Product } from "@/lib/types";
@@ -14,6 +15,8 @@ function logError(context: string, err: unknown): void {
 }
 
 export function CatalogClient() {
+  const t = useTranslations("catalog");
+  const tCommon = useTranslations("common");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -60,11 +63,11 @@ export function CatalogClient() {
       setTotal(data.total ?? list.length);
     } catch (err) {
       logError("load products", err);
-      setError(err instanceof Error ? err.message : "Failed to load catalog");
+      setError(err instanceof Error ? err.message : tCommon("errorLoadProducts"));
     } finally {
       setLoading(false);
     }
-  }, [page, perPage, category, q]);
+  }, [page, perPage, category, q, tCommon]);
 
   useEffect(() => {
     loadCategories();
@@ -101,26 +104,26 @@ export function CatalogClient() {
       <aside className="w-full md:w-56 flex-shrink-0 space-y-4">
         <form onSubmit={handleSearchSubmit} role="search">
           <label htmlFor="catalog-search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Search
+            {t("searchLabel")}
           </label>
           <input
             id="catalog-search"
             name="q"
             type="search"
             defaultValue={q}
-            placeholder="Search products..."
+            placeholder={t("searchPlaceholder")}
             className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
           />
           <button
             type="submit"
             className="mt-1 w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-sm hover:bg-gray-200 dark:hover:bg-gray-600"
           >
-            Search
+            {t("searchButton")}
           </button>
         </form>
         <div>
           <label htmlFor="catalog-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Category
+            {t("category")}
           </label>
           <select
             id="catalog-category"
@@ -128,7 +131,7 @@ export function CatalogClient() {
             onChange={(e) => setParams({ category: e.target.value, page: 1 })}
             className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
           >
-            <option value="">All</option>
+            <option value="">{t("allCategories")}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.slug}>
                 {c.name}
@@ -138,37 +141,37 @@ export function CatalogClient() {
         </div>
         <div>
           <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Price range
+            {t("priceRange")}
           </span>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Coming soon</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t("comingSoon")}</p>
         </div>
       </aside>
 
       <div className="flex-1">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {total} product{total !== 1 ? "s" : ""}
+            {total === 1 ? t("productsCount", { count: 1 }) : t("productsCount_other", { count: total })}
           </span>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-gray-600 dark:text-gray-400">View:</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{tCommon("view")}</span>
             <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
               <button
                 type="button"
                 onClick={() => setParams({ view: "grid", page: 1 })}
                 className={`px-3 py-1.5 text-sm ${view === "grid" ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
               >
-                Grid
+                {tCommon("grid")}
               </button>
               <button
                 type="button"
                 onClick={() => setParams({ view: "list", page: 1 })}
                 className={`px-3 py-1.5 text-sm ${view === "list" ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"}`}
               >
-                List
+                {tCommon("list")}
               </button>
             </div>
             <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              Per page:
+              {tCommon("perPage")}
               <select
                 value={perPage}
                 onChange={(e) =>
@@ -193,7 +196,7 @@ export function CatalogClient() {
         )}
 
         {loading ? (
-          <p className="text-gray-500 py-8">Loading…</p>
+          <p className="text-gray-500 py-8">{tCommon("loading")}</p>
         ) : (
           <>
             {view === "list" ? (
@@ -213,7 +216,7 @@ export function CatalogClient() {
             )}
 
             {!loading && products.length === 0 && !error && (
-              <p className="text-gray-500 py-8">No products found.</p>
+              <p className="text-gray-500 py-8">{t("noProducts")}</p>
             )}
 
             {totalPages > 1 && (
@@ -222,7 +225,7 @@ export function CatalogClient() {
                 aria-label="Pagination"
               >
                 <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">
-                  Page {page} of {totalPages}
+                  {t("pageOf", { page, total: totalPages })}
                 </span>
                 <button
                   type="button"
@@ -230,7 +233,7 @@ export function CatalogClient() {
                   onClick={() => setParams({ page: page - 1 })}
                   className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                  Previous
+                  {tCommon("previous")}
                 </button>
                 <button
                   type="button"
@@ -238,7 +241,7 @@ export function CatalogClient() {
                   onClick={() => setParams({ page: page + 1 })}
                   className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                  Next
+                  {tCommon("next")}
                 </button>
               </nav>
             )}

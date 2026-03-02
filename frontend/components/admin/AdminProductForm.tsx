@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   createProduct,
   updateProduct,
@@ -44,6 +45,8 @@ interface AdminProductFormProps {
 }
 
 export function AdminProductForm({ product }: AdminProductFormProps) {
+  const t = useTranslations("admin");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] ?? "en";
@@ -176,7 +179,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       setExistingImages((prev) => prev.filter((i) => i.id !== img.id));
     } catch (err) {
       logError("remove image", err);
-      setError(err instanceof Error ? err.message : "Failed to remove image");
+      setError(err instanceof Error ? err.message : tCommon("errorRemoveImage"));
     }
   };
 
@@ -184,7 +187,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
     e.preventDefault();
     const name = newCategoryName.trim();
     if (!name) {
-      setAddCategoryError("Name is required");
+      setAddCategoryError(t("nameRequiredValidation"));
       return;
     }
     setAddCategoryError(null);
@@ -197,7 +200,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       setShowAddCategory(false);
     } catch (err) {
       logError("create category", err);
-      setAddCategoryError(err instanceof Error ? err.message : "Failed to create category");
+      setAddCategoryError(err instanceof Error ? err.message : t("errorCreateCategory"));
     } finally {
       setAddCategoryLoading(false);
     }
@@ -235,7 +238,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       }
     } catch (err) {
       logError("save product", err);
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(err instanceof Error ? err.message : t("errorSave"));
     } finally {
       setLoading(false);
     }
@@ -246,14 +249,14 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       {!isEdit && (
         <div
           className="p-4 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 space-y-3"
-          aria-label="Copy from existing product"
+          aria-label={t("copyFromProduct")}
         >
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Copy from existing product
+            {t("copyFromProduct")}
           </h2>
           <div className="relative" ref={copyDropdownRef}>
             <label htmlFor="copy-search" className="sr-only">
-              Search products to copy from
+              {t("copySearchPlaceholder")}
             </label>
             <input
               id="copy-search"
@@ -261,13 +264,13 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
               value={copySearchQuery}
               onChange={(e) => setCopySearchQuery(e.target.value)}
               onFocus={() => copySearchResults.length > 0 && setCopyDropdownVisible(true)}
-              placeholder="Search by name or SKU…"
+              placeholder={t("copySearchPlaceholder")}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
               autoComplete="off"
             />
             {copySearchLoading && (
               <p className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                Searching…
+                {t("searching")}
               </p>
             )}
             {copyDropdownVisible && copySearchResults.length > 0 && (
@@ -335,14 +338,14 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
                 onClick={() => handleCopyFromProduct(copySelectedProduct)}
                 className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:opacity-90"
               >
-                Copy from this product
+                {t("copyFromThisProduct")}
               </button>
               <button
                 type="button"
                 onClick={() => setCopySelectedProduct(null)}
                 className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                Clear
+                {t("clear")}
               </button>
             </div>
           )}
@@ -350,7 +353,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       )}
       <div>
         <label htmlFor="name" className="block text-sm font-medium mb-1">
-          Name *
+          {t("nameRequired")}
         </label>
         <input
           id="name"
@@ -362,20 +365,20 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       </div>
       <div>
         <label htmlFor="sku" className="block text-sm font-medium mb-1">
-          SKU
+          {t("sku")}
         </label>
         <input
           id="sku"
           type="text"
           readOnly
-          value={isEdit && product?.sku ? product.sku : "Generated on save"}
+          value={isEdit && product?.sku ? product.sku : t("skuReadOnly")}
           className="w-full rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 px-3 py-2 text-gray-600 dark:text-gray-400 cursor-not-allowed"
-          aria-label="SKU (system-generated, read-only)"
+          aria-label={t("skuAriaLabel")}
         />
       </div>
       <div>
         <label htmlFor="category" className="block text-sm font-medium mb-1">
-          Category
+          {t("category")}
         </label>
         <div className="flex gap-2 items-center">
           <select
@@ -383,9 +386,9 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value === "" ? "" : Number(e.target.value))}
             className="flex-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
-            aria-label="Product category"
+            aria-label={t("categoryAriaLabel")}
           >
-            <option value="">None</option>
+            <option value="">{t("none")}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -397,7 +400,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
             onClick={() => setShowAddCategory(true)}
             className="px-3 py-2 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm whitespace-nowrap"
           >
-            Add category
+            {t("addCategory")}
           </button>
         </div>
         {showAddCategory && (
@@ -407,11 +410,11 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
             aria-labelledby="add-category-title"
           >
             <h3 id="add-category-title" className="text-sm font-medium mb-2">
-              New category
+              {t("newCategory")}
             </h3>
             <div className="space-y-2">
               <label htmlFor="newCategoryName" className="sr-only">
-                Category name
+                {t("categoryNamePlaceholder")}
               </label>
               <input
                 id="newCategoryName"
@@ -424,7 +427,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
                     handleAddCategory(e as unknown as React.FormEvent);
                   }
                 }}
-                placeholder="Category name"
+                placeholder={t("categoryNamePlaceholder")}
                 className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
                 autoFocus
               />
@@ -443,7 +446,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
                   }}
                   className="px-3 py-1.5 rounded bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium disabled:opacity-50"
                 >
-                  {addCategoryLoading ? "Creating…" : "Create"}
+                  {addCategoryLoading ? t("creating") : t("create")}
                 </button>
                 <button
                   type="button"
@@ -454,7 +457,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
                   }}
                   className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
               </div>
             </div>
@@ -463,7 +466,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       </div>
       <div>
         <label htmlFor="description" className="block text-sm font-medium mb-1">
-          Description
+          {t("description")}
         </label>
         <textarea
           id="description"
@@ -476,7 +479,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label htmlFor="price" className="block text-sm font-medium mb-1">
-            Price *
+            {t("priceRequired")}
           </label>
           <input
             id="price"
@@ -491,7 +494,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
         </div>
         <div>
           <label htmlFor="discount" className="block text-sm font-medium mb-1">
-            Discount %
+            {t("discountPercent")}
           </label>
           <input
             id="discount"
@@ -506,7 +509,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
         </div>
         <div>
           <label htmlFor="qty" className="block text-sm font-medium mb-1">
-            Quantity per box *
+            {t("quantityPerBox")}
           </label>
           <input
             id="qty"
@@ -527,10 +530,10 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
           onChange={(e) => setIsPromoted(e.target.checked)}
           className="rounded"
         />
-        <label htmlFor="promoted">Promoted</label>
+        <label htmlFor="promoted">{t("promotedLabel")}</label>
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Images (3–6)</label>
+        <label className="block text-sm font-medium mb-1">{t("imagesLabel")}</label>
         {isEdit && existingImages.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
             {existingImages.map((img) => (
@@ -545,9 +548,9 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
                   type="button"
                   onClick={() => handleRemoveImage(img)}
                   className="absolute top-0 right-0 rounded bg-red-600 text-white text-xs px-1.5 py-0.5 hover:bg-red-700"
-                  aria-label={`Remove image ${img.id}`}
+                  aria-label={`${t("remove")} image ${img.id}`}
                 >
-                  Remove
+                  {t("remove")}
                 </button>
               </div>
             ))}
@@ -567,9 +570,9 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
                   type="button"
                   onClick={() => removePendingImage(index)}
                   className="absolute top-0 right-0 rounded bg-red-600 text-white text-xs px-1.5 py-0.5 hover:bg-red-700"
-                  aria-label={`Remove image ${index + 1} from upload list`}
+                  aria-label={`${t("remove")} image ${index + 1}`}
                 >
-                  Remove
+                  {t("remove")}
                 </button>
               </div>
             ))}
@@ -587,13 +590,14 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
               e.target.value = "";
             }}
             className="w-full text-sm"
-            aria-label="Add images to upload (3–6 total)"
+            aria-label={t("addImagesAria")}
           />
         )}
         {pendingImages.length > 0 && (
           <p className="text-sm text-gray-500 mt-1">
-            {pendingImages.length} new file(s) to upload
-            {isEdit && existingImages.length > 0 && ` (${existingImages.length} existing)`}. Max 6 total.
+            {t("newFilesToUpload", { count: pendingImages.length })}
+            {isEdit && existingImages.length > 0 && ` ${t("existingCount", { existing: existingImages.length })} `}
+            {t("maxTotal")}
           </p>
         )}
       </div>
@@ -608,13 +612,13 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
           disabled={loading}
           className="px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium disabled:opacity-50"
         >
-          {loading ? "Saving…" : isEdit ? "Update" : "Create"}
+          {loading ? t("saving") : isEdit ? t("update") : t("create")}
         </button>
         <Link
           href={`/${locale}/admin/products`}
           className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
-          Cancel
+          {t("cancel")}
         </Link>
       </div>
     </form>

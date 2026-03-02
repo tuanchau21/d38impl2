@@ -26,7 +26,7 @@ export default async function HomePage() {
           href="/catalog"
           className="inline-block mt-4 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:opacity-90"
         >
-          View catalog
+          Search products
         </Link>
       </section>
 
@@ -59,7 +59,7 @@ export default async function HomePage() {
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
           <Link href="/catalog" className="text-blue-600 dark:text-blue-400 hover:underline">
-            View full catalog
+            Search products
           </Link>{" "}
           to filter by category and search.
         </p>

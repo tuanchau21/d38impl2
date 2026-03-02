@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { ProductCard } from "@/components/ProductCard";
 import type { Product } from "@/lib/types";
 
@@ -45,6 +46,7 @@ export function PromotedCarousel({ products }: PromotedCarouselProps) {
     (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
   }, []);
 
+  const t = useTranslations("common");
   if (products.length === 0) return null;
 
   return (
@@ -53,7 +55,7 @@ export function PromotedCarousel({ products }: PromotedCarouselProps) {
       <button
         type="button"
         onClick={() => scrollBy(-320)}
-        aria-label="Scroll promoted products left"
+        aria-label={t("scrollPromotedLeft")}
         className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +66,7 @@ export function PromotedCarousel({ products }: PromotedCarouselProps) {
       <button
         type="button"
         onClick={() => scrollBy(320)}
-        aria-label="Scroll promoted products right"
+        aria-label={t("scrollPromotedRight")}
         className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ProductCard } from "./ProductCard";
+import { IntlWrapper } from "./test-utils";
 import type { Product } from "@/lib/types";
 
 vi.mock("next/link", () => ({
@@ -13,6 +14,16 @@ vi.mock("next/link", () => ({
     href: string;
   }) => React.createElement("a", { href }, children),
 }));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/en/products/test",
+}));
+
+function renderWithIntl(ui: React.ReactElement) {
+  return render(ui, {
+    wrapper: ({ children }) => <IntlWrapper>{children}</IntlWrapper>,
+  });
+}
 
 const baseProduct: Product = {
   id: 1,
@@ -31,7 +42,7 @@ const baseProduct: Product = {
 
 describe("ProductCard", () => {
   it("renders name, sku, price and quantity per box", () => {
-    render(<ProductCard product={baseProduct} />);
+    renderWithIntl(<ProductCard product={baseProduct} />);
     expect(screen.getByText("Test Shoe")).toBeInTheDocument();
     expect(screen.getByText("SKU-1")).toBeInTheDocument();
     expect(screen.getByText("$99.99")).toBeInTheDocument();
@@ -39,7 +50,7 @@ describe("ProductCard", () => {
   });
 
   it("empty state: shows No image when product has no images", () => {
-    render(<ProductCard product={baseProduct} />);
+    renderWithIntl(<ProductCard product={baseProduct} />);
     expect(screen.getByText("No image")).toBeInTheDocument();
   });
 
@@ -48,7 +59,7 @@ describe("ProductCard", () => {
       ...baseProduct,
       images: [{ id: 1, product_id: 1, url: "https://example.com/img.jpg", sort_order: 0 }],
     };
-    render(<ProductCard product={productWithImage} />);
+    renderWithIntl(<ProductCard product={productWithImage} />);
     const img = screen.getByRole("img", { name: "Test Shoe" });
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute("loading", "lazy");
@@ -61,25 +72,25 @@ describe("ProductCard", () => {
       price: 100,
       discount_percent: 20,
     };
-    render(<ProductCard product={discounted} />);
+    renderWithIntl(<ProductCard product={discounted} />);
     expect(screen.getByText("$80.00")).toBeInTheDocument();
     expect(screen.getByText("$100.00")).toHaveClass("line-through");
   });
 
   it("shows Promoted badge when is_promoted is true", () => {
-    render(<ProductCard product={{ ...baseProduct, is_promoted: true }} />);
+    renderWithIntl(<ProductCard product={{ ...baseProduct, is_promoted: true }} />);
     expect(screen.getByText("Promoted")).toBeInTheDocument();
   });
 
   it("links to product by slug", () => {
-    render(<ProductCard product={baseProduct} />);
+    renderWithIntl(<ProductCard product={baseProduct} />);
     const link = screen.getByRole("link", { name: /Test Shoe/i });
-    expect(link).toHaveAttribute("href", "/products/test-shoe");
+    expect(link).toHaveAttribute("href", "/en/products/test-shoe");
   });
 
   it("links by id when slug is empty", () => {
-    render(<ProductCard product={{ ...baseProduct, slug: "" }} />);
+    renderWithIntl(<ProductCard product={{ ...baseProduct, slug: "" }} />);
     const link = screen.getByRole("link", { name: /Test Shoe/i });
-    expect(link).toHaveAttribute("href", "/products/1");
+    expect(link).toHaveAttribute("href", "/en/products/1");
   });
 });

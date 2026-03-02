@@ -14,19 +14,13 @@ export function Header() {
             href="/catalog"
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
           >
-            Catalog
+            Search
           </Link>
           <Link
             href="/promotions"
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
           >
             Promotions
-          </Link>
-          <Link
-            href="/admin"
-            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-          >
-            Admin
           </Link>
           {/* Placeholders for future: Account, Cart — disabled/hidden in v1 */}
         </nav>

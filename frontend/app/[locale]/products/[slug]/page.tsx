@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getProduct } from "@/lib/api";
 import { ImageGallery } from "@/components/ImageGallery";
 
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
+  const t = await getTranslations("product");
   let product;
   try {
     product = await getProduct(slug);
@@ -40,7 +42,7 @@ export default async function ProductPage({ params }: PageProps) {
           <p className="text-gray-500 dark:text-gray-400 mt-1">{product.sku}</p>
           {product.is_promoted && (
             <span className="inline-block mt-2 bg-amber-500 text-white text-xs font-medium px-2 py-0.5 rounded">
-              Promoted
+              {t("promotedBadge")}
             </span>
           )}
           <div className="mt-4 flex items-baseline gap-2">
@@ -54,7 +56,7 @@ export default async function ProductPage({ params }: PageProps) {
             )}
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-            {product.quantity_per_box} per box
+            {product.quantity_per_box} {t("perBox")}
           </p>
           {product.description && (
             <p className="mt-4 text-gray-700 dark:text-gray-300">
@@ -67,9 +69,9 @@ export default async function ProductPage({ params }: PageProps) {
               type="button"
               disabled
               className="px-4 py-2 rounded-lg bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
-              title="Cart not available in this version"
+              title={t("cartNotAvailable")}
             >
-              Add to cart (coming later)
+              {t("addToCartLater")}
             </button>
           </div>
         </div>

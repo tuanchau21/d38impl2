@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { HomeProductList } from "@/app/HomeProductList";
 import type { Category } from "@/lib/types";
 
@@ -14,6 +15,7 @@ function sortCategories(categories: Category[]): Category[] {
 }
 
 export function HomeCatalogLayout({ categories }: HomeCatalogLayoutProps) {
+  const t = useTranslations("home");
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentCategory = searchParams.get("category") ?? "";
@@ -38,7 +40,7 @@ export function HomeCatalogLayout({ categories }: HomeCatalogLayoutProps) {
       {/* Left panel — Browse by category (toggles) */}
       <aside className="w-full md:w-56 flex-shrink-0">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Browse by category
+          {t("browseByCategory")}
         </h2>
         <nav aria-label="Filter by category" className="flex flex-col gap-1">
           <button
@@ -50,7 +52,7 @@ export function HomeCatalogLayout({ categories }: HomeCatalogLayoutProps) {
                 : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
             }`}
           >
-            All
+            {t("all")}
           </button>
           {sorted.map((c) => (
             <button

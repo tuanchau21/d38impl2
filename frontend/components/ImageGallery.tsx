@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { ProductImage } from "@/lib/types";
 
 interface ImageGalleryProps {
@@ -9,13 +10,14 @@ interface ImageGalleryProps {
 }
 
 export function ImageGallery({ images, productName }: ImageGalleryProps) {
+  const t = useTranslations("common");
   const [selected, setSelected] = useState(0);
   const list = images.length ? images.sort((a, b) => a.sort_order - b.sort_order) : [];
 
   if (list.length === 0) {
     return (
       <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-500">
-        No images
+        {t("noImages")}
       </div>
     );
   }

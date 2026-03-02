@@ -2,19 +2,26 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import * as FlagIcons from "country-flag-icons/react/3x2";
-import { availableLocales, type LocaleCode, type FlagCountryCode } from "@/lib/i18n";
+import { availableLocales, localeCookieName, type LocaleCode, type FlagCountryCode } from "@/lib/i18n";
+
+function setLocaleCookie(locale: LocaleCode) {
+  document.cookie = `${localeCookieName}=${locale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
+}
 
 interface HeaderProps {
   locale: LocaleCode;
 }
 
 export function Header({ locale }: HeaderProps) {
+  const t = useTranslations("nav");
   const router = useRouter();
   const pathname = usePathname();
 
   const switchLocale = (newLocale: LocaleCode) => {
     if (newLocale === locale) return;
+    setLocaleCookie(newLocale);
     const segments = pathname?.split("/").filter(Boolean) ?? [];
     const rest = segments.slice(1).join("/");
     const newPath = rest ? `/${newLocale}/${rest}` : `/${newLocale}`;
@@ -28,33 +35,27 @@ export function Header({ locale }: HeaderProps) {
           href={`/${locale}`}
           className="font-semibold text-lg text-gray-900 dark:text-white shrink-0"
         >
-          Bulk Shoe Shop
+          {t("siteName")}
         </Link>
         <nav className="flex items-center gap-3 sm:gap-6 flex-1 justify-end flex-wrap">
           <Link
             href={`/${locale}/catalog`}
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
           >
-            Categories
+            {t("catalog")}
           </Link>
           <Link
             href={`/${locale}/promotions`}
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
           >
-            Promotions
-          </Link>
-          <Link
-            href={`/${locale}/admin`}
-            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-          >
-            Admin
+            {t("promotions")}
           </Link>
           {/* Placeholders for future: Account, Cart — disabled in v1 */}
-          <span className="text-gray-400 dark:text-gray-500 text-sm cursor-not-allowed" title="Coming later">
-            Account
+          <span className="text-gray-400 dark:text-gray-500 text-sm cursor-not-allowed" title={t("accountComingLater")}>
+            {t("account")}
           </span>
-          <span className="text-gray-400 dark:text-gray-500 text-sm cursor-not-allowed" title="Coming later">
-            Cart
+          <span className="text-gray-400 dark:text-gray-500 text-sm cursor-not-allowed" title={t("accountComingLater")}>
+            {t("cart")}
           </span>
           {/* Language selector: short code + flag icon (country-flag-icons) per translation file */}
           <div className="flex items-center gap-1" role="group" aria-label="Language">
@@ -68,7 +69,7 @@ export function Header({ locale }: HeaderProps) {
                   type="button"
                   onClick={() => switchLocale(l.code)}
                   aria-current={l.code === locale ? "true" : undefined}
-                  aria-label={`Switch to ${l.label}`}
+                  aria-label={t("switchTo", { label: l.label })}
                   className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-sm ${
                     l.code === locale
                       ? "font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800"

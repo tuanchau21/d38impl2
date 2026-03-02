@@ -1,8 +1,10 @@
 import { use } from "react";
 import { notFound } from "next/navigation";
+import { NextIntlClientProvider } from "next-intl";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { isLocale } from "@/lib/i18n";
+import { isLocale, type LocaleCode } from "@/lib/i18n";
+import { getMessages } from "@/lib/loadMessages";
 
 export default function LocaleLayout({
   children,
@@ -15,11 +17,12 @@ export default function LocaleLayout({
   if (!isLocale(locale)) {
     notFound();
   }
+  const messages = getMessages(locale as LocaleCode);
   return (
-    <>
-      <Header locale={locale} />
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <Header locale={locale as LocaleCode} />
       <main className="flex-1">{children}</main>
-      <Footer />
-    </>
+      <Footer locale={locale as LocaleCode} />
+    </NextIntlClientProvider>
   );
 }

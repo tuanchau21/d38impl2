@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   getAdminCategories,
   createCategory,
@@ -14,6 +15,8 @@ function logError(context: string, err: unknown): void {
 }
 
 export default function AdminCategoriesPage() {
+  const t = useTranslations("admin");
+  const tCommon = useTranslations("common");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +39,7 @@ export default function AdminCategoriesPage() {
       setCategories(list);
     } catch (err) {
       logError("load categories", err);
-      setError(err instanceof Error ? err.message : "Failed to load categories");
+      setError(err instanceof Error ? err.message : t("errorLoadCategories"));
     } finally {
       setLoading(false);
     }
@@ -50,7 +53,7 @@ export default function AdminCategoriesPage() {
     e.preventDefault();
     const name = addName.trim();
     if (!name) {
-      setAddError("Name is required");
+      setAddError(t("nameRequiredValidation"));
       return;
     }
     setSubmitting(true);
@@ -68,7 +71,7 @@ export default function AdminCategoriesPage() {
       await load();
     } catch (err) {
       logError("create category", err);
-      setAddError(err instanceof Error ? err.message : "Failed to add category");
+      setAddError(err instanceof Error ? err.message : t("errorAddCategory"));
     } finally {
       setSubmitting(false);
     }
@@ -93,7 +96,7 @@ export default function AdminCategoriesPage() {
     if (editingId == null) return;
     const name = editName.trim();
     if (!name) {
-      setEditError("Name is required");
+      setEditError(t("nameRequiredValidation"));
       return;
     }
     setSubmitting(true);
@@ -107,7 +110,7 @@ export default function AdminCategoriesPage() {
       await load();
     } catch (err) {
       logError("update category", err);
-      setEditError(err instanceof Error ? err.message : "Failed to update category");
+      setEditError(err instanceof Error ? err.message : t("errorUpdateCategory"));
     } finally {
       setSubmitting(false);
     }
@@ -115,9 +118,7 @@ export default function AdminCategoriesPage() {
 
   const handleDelete = async (cat: Category) => {
     if (
-      !confirm(
-        `Delete category "${cat.name}"? Products using it must be updated first.`
-      )
+      !confirm(t("deleteCategoryConfirm", { name: cat.name }))
     ) {
       return;
     }
@@ -128,7 +129,7 @@ export default function AdminCategoriesPage() {
     } catch (err) {
       logError("delete category", err);
       const message =
-        err instanceof Error ? err.message : "Delete failed";
+        err instanceof Error ? err.message : t("errorDelete");
       setError(message);
     }
   };
@@ -143,7 +144,7 @@ export default function AdminCategoriesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Categories
+          {t("categories")}
         </h1>
         <button
           type="button"
@@ -153,7 +154,7 @@ export default function AdminCategoriesPage() {
           }}
           className="px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium hover:opacity-90"
         >
-          Add category
+          {t("addCategoryButton")}
         </button>
       </div>
 
@@ -169,7 +170,7 @@ export default function AdminCategoriesPage() {
           className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50"
         >
           <h2 className="text-lg font-medium mb-3 text-gray-900 dark:text-white">
-            New category
+            {t("newCategoryTitle")}
           </h2>
           {addError && (
             <p className="text-red-600 dark:text-red-400 text-sm mb-2" role="alert">
@@ -179,38 +180,38 @@ export default function AdminCategoriesPage() {
           <div className="flex flex-wrap gap-4 items-end">
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Name (required)
+                {t("nameRequiredLabel")}
               </span>
               <input
                 type="text"
                 value={addName}
                 onChange={(e) => setAddName(e.target.value)}
                 className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-48"
-                placeholder="Category name"
+                placeholder={t("categoryNamePlaceholder")}
               />
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Slug (optional)
+                {t("slugOptional")}
               </span>
               <input
                 type="text"
                 value={addSlug}
                 onChange={(e) => setAddSlug(e.target.value)}
                 className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-40"
-                placeholder="url-slug"
+                placeholder={t("urlSlugPlaceholder")}
               />
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Parent (optional)
+                {t("parentOptional")}
               </span>
               <select
                 value={addParentId}
                 onChange={(e) => setAddParentId(e.target.value)}
                 className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-40"
               >
-                <option value="">None</option>
+                <option value="">{t("none")}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -223,7 +224,7 @@ export default function AdminCategoriesPage() {
               disabled={submitting}
               className="px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium hover:opacity-90 disabled:opacity-50"
             >
-              {submitting ? "Adding…" : "Add"}
+              {submitting ? t("adding") : t("add")}
             </button>
             <button
               type="button"
@@ -233,23 +234,23 @@ export default function AdminCategoriesPage() {
               }}
               className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              Cancel
+              {t("cancel")}
             </button>
           </div>
         </form>
       )}
 
       {loading ? (
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-500">{tCommon("loading")}</p>
       ) : (
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">Slug</th>
-                <th className="px-4 py-2 font-medium">Parent</th>
-                <th className="px-4 py-2 font-medium">Actions</th>
+                <th className="px-4 py-2 font-medium">{t("nameLabel")}</th>
+                <th className="px-4 py-2 font-medium">{t("slugLabel")}</th>
+                <th className="px-4 py-2 font-medium">{t("parentLabel")}</th>
+                <th className="px-4 py-2 font-medium">{t("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -268,23 +269,23 @@ export default function AdminCategoriesPage() {
                             </p>
                           )}
                           <label className="flex flex-col gap-1">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Name</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">{t("nameLabel")}</span>
                             <input
                               type="text"
                               value={editName}
                               onChange={(e) => setEditName(e.target.value)}
                               className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-48"
-                              placeholder="Category name"
+                              placeholder={t("categoryNamePlaceholder")}
                             />
                           </label>
                           <label className="flex flex-col gap-1">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Slug</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">{t("slugLabel")}</span>
                             <input
                               type="text"
                               value={editSlug}
                               onChange={(e) => setEditSlug(e.target.value)}
                               className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-40"
-                              placeholder="url-slug"
+                              placeholder={t("urlSlugPlaceholder")}
                             />
                           </label>
                           <button
@@ -292,14 +293,14 @@ export default function AdminCategoriesPage() {
                             disabled={submitting}
                             className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:opacity-90 disabled:opacity-50"
                           >
-                            {submitting ? "Saving…" : "Save"}
+                            {submitting ? t("saving") : t("save")}
                           </button>
                           <button
                             type="button"
                             onClick={cancelEdit}
                             className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
-                            Cancel
+                            {t("cancel")}
                           </button>
                         </form>
                       </td>
@@ -321,14 +322,14 @@ export default function AdminCategoriesPage() {
                           onClick={() => startEdit(cat)}
                           className="text-indigo-600 dark:text-indigo-400 hover:underline mr-2"
                         >
-                          Edit
+                          {t("editCategory")}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(cat)}
                           className="text-red-600 dark:text-red-400 hover:underline"
                         >
-                          Delete
+                          {t("deleteCategory")}
                         </button>
                       </td>
                     </>
@@ -341,7 +342,7 @@ export default function AdminCategoriesPage() {
       )}
 
       {!loading && categories.length === 0 && (
-        <p className="text-gray-500 mt-4">No categories yet. Add one above.</p>
+        <p className="text-gray-500 mt-4">{t("noCategoriesYet")}</p>
       )}
     </div>
   );

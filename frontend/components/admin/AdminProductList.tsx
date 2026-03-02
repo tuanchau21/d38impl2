@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   getAdminProducts,
   getAdminCategories,
@@ -16,6 +17,8 @@ function logError(context: string, err: unknown): void {
 }
 
 export function AdminProductList() {
+  const t = useTranslations("admin");
+  const tCommon = useTranslations("common");
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] ?? "en";
   const [products, setProducts] = useState<Product[]>([]);
@@ -37,7 +40,7 @@ export function AdminProductList() {
       setCategories(catList);
     } catch (err) {
       logError("load products", err);
-      setError(err instanceof Error ? err.message : "Failed to load products");
+      setError(err instanceof Error ? err.message : t("errorLoadProducts"));
     } finally {
       setLoading(false);
     }
@@ -59,7 +62,7 @@ export function AdminProductList() {
       );
     } catch (err) {
       logError("update promoted", err);
-      setError(err instanceof Error ? err.message : "Update failed");
+      setError(err instanceof Error ? err.message : t("errorUpdate"));
     } finally {
       setUpdatingId(null);
     }
@@ -77,20 +80,20 @@ export function AdminProductList() {
       );
     } catch (err) {
       logError("update category", err);
-      setError(err instanceof Error ? err.message : "Update failed");
+      setError(err instanceof Error ? err.message : t("errorUpdate"));
     } finally {
       setUpdatingId(null);
     }
   };
 
   const handleDelete = async (p: Product) => {
-    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+    if (!confirm(t("deleteProductConfirm", { name: p.name }))) return;
     try {
       await deleteProduct(p.id);
       setProducts((prev) => prev.filter((x) => x.id !== p.id));
     } catch (err) {
       logError("delete product", err);
-      setError(err instanceof Error ? err.message : "Delete failed");
+      setError(err instanceof Error ? err.message : t("errorDelete"));
     }
   };
 
@@ -101,7 +104,7 @@ export function AdminProductList() {
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search products..."
+          placeholder={t("searchPlaceholder")}
           className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 w-64"
         />
       </div>
@@ -111,21 +114,21 @@ export function AdminProductList() {
         </p>
       )}
       {loading ? (
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-500">{tCommon("loading")}</p>
       ) : (
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-4 py-2 font-medium w-16">Thumb</th>
-                <th className="px-4 py-2 font-medium">Name</th>
-                <th className="px-4 py-2 font-medium">SKU</th>
-                <th className="px-4 py-2 font-medium">Category</th>
-                <th className="px-4 py-2 font-medium">Price</th>
-                <th className="px-4 py-2 font-medium">Discount</th>
-                <th className="px-4 py-2 font-medium">Per box</th>
-                <th className="px-4 py-2 font-medium">Promoted</th>
-                <th className="px-4 py-2 font-medium">Actions</th>
+                <th className="px-4 py-2 font-medium w-16">{t("thumb")}</th>
+                <th className="px-4 py-2 font-medium">{t("name")}</th>
+                <th className="px-4 py-2 font-medium">{t("sku")}</th>
+                <th className="px-4 py-2 font-medium">{t("category")}</th>
+                <th className="px-4 py-2 font-medium">{t("price")}</th>
+                <th className="px-4 py-2 font-medium">{t("discount")}</th>
+                <th className="px-4 py-2 font-medium">{t("perBox")}</th>
+                <th className="px-4 py-2 font-medium">{t("promoted")}</th>
+                <th className="px-4 py-2 font-medium">{t("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -158,7 +161,7 @@ export function AdminProductList() {
                       className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm min-w-[120px] disabled:opacity-50"
                       aria-label={`Category for ${p.name}`}
                     >
-                      <option value="">(None)</option>
+                      <option value="">{t("none")}</option>
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
@@ -176,7 +179,7 @@ export function AdminProductList() {
                       disabled={updatingId === p.id}
                       role="switch"
                       aria-checked={p.is_promoted}
-                      aria-label={p.is_promoted ? "Promoted; click to unset" : "Not promoted; click to set"}
+                      aria-label={p.is_promoted ? t("promotedSet") : t("promotedUnset")}
                       className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                         p.is_promoted
                           ? "bg-indigo-600"
@@ -196,14 +199,14 @@ export function AdminProductList() {
                       href={`/${locale}/admin/products/${p.id}/edit`}
                       className="text-blue-600 dark:text-blue-400 hover:underline mr-2"
                     >
-                      Edit
+                      {t("edit")}
                     </Link>
                     <button
                       type="button"
                       onClick={() => handleDelete(p)}
                       className="text-red-600 dark:text-red-400 hover:underline"
                     >
-                      Delete
+                      {t("delete")}
                     </button>
                   </td>
                 </tr>
@@ -213,7 +216,7 @@ export function AdminProductList() {
         </div>
       )}
       {!loading && products.length === 0 && (
-        <p className="text-gray-500">No products found.</p>
+        <p className="text-gray-500">{t("noProducts")}</p>
       )}
     </div>
   );
