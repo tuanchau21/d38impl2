@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/lib/api";
 
@@ -11,8 +11,10 @@ function logError(context: string, err: unknown): void {
 
 function AdminLoginForm() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") ?? "/admin";
+  const locale = pathname?.split("/")[1] ?? "en";
+  const redirectTo = searchParams.get("redirect") ?? `/${locale}/admin`;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +88,7 @@ function AdminLoginForm() {
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          <Link href="/" className="hover:underline">
+          <Link href={`/${locale}`} className="hover:underline">
             Back to shop
           </Link>
         </p>

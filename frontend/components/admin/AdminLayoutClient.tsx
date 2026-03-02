@@ -10,7 +10,7 @@ interface AdminLayoutClientProps {
 
 export function AdminLayoutClient({ children }: AdminLayoutClientProps) {
   const pathname = usePathname();
-  if (pathname === "/admin/login") {
+  if (pathname?.endsWith("/admin/login")) {
     return <>{children}</>;
   }
   return (

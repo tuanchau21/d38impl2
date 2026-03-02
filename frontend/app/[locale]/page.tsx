@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getPromoted, getCategories } from "@/lib/api";
-import { ProductCard } from "@/components/ProductCard";
+import { PromotedCarousel } from "@/components/PromotedCarousel";
 import { HomeCatalogLayout } from "@/app/HomeCatalogLayout";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export default async function HomePage({
+  params,
+}: Readonly<{
+  params: Promise<{ locale: string }>;
+}>) {
+  const { locale } = await params;
   const [promoted, categories] = await Promise.all([
     getPromoted().catch((err) => {
       console.error("[home] Failed to load promoted products", { error: err });
@@ -28,23 +33,14 @@ export default async function HomePage() {
               Promoted products
             </h2>
             <Link
-              href="/promotions"
+              href={`/${locale}/promotions`}
               className="text-sm text-gray-600 dark:text-gray-300 hover:underline"
             >
               View all →
             </Link>
           </div>
           {promoted.length > 0 ? (
-            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-thin">
-              {promoted.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex-shrink-0 w-[280px] sm:w-[300px]"
-                >
-                  <ProductCard product={p} className="h-full" />
-                </div>
-              ))}
-            </div>
+            <PromotedCarousel products={promoted} />
           ) : (
             <p className="text-gray-500 dark:text-gray-400">
               No promoted products at the moment.

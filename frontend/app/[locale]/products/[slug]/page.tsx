@@ -3,7 +3,7 @@ import { getProduct } from "@/lib/api";
 import { ImageGallery } from "@/components/ImageGallery";
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }
 
 export const dynamic = "force-dynamic";

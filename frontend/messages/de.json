@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "catalog": "Kategorien",
+    "promotions": "Aktionen",
+    "search": "Suchen",
+    "admin": "Admin",
+    "account": "Konto",
+    "cart": "Warenkorb"
+  },
+  "home": {
+    "promotedTitle": "Empfohlene Produkte",
+    "viewAll": "Alle anzeigen",
+    "allProducts": "Alle Produkte"
+  }
+}

@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { Product } from "@/lib/types";
 
 export type ProductCardView = "grid" | "list";
@@ -8,9 +11,13 @@ interface ProductCardProps {
   view?: ProductCardView;
   /** Larger card for promoted strip (e.g. min-w-[280px]) */
   className?: string;
+  /** Show explicit "View" / "Details" CTA in accent (e.g. promoted sector) */
+  showCta?: boolean;
 }
 
-export function ProductCard({ product, view = "grid", className }: ProductCardProps) {
+export function ProductCard({ product, view = "grid", className, showCta }: ProductCardProps) {
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] ?? "en";
   const imageUrl = product.images?.[0]?.url ?? null;
   const priceDisplay = product.discount_percent
     ? (
@@ -19,7 +26,7 @@ export function ProductCard({ product, view = "grid", className }: ProductCardPr
       ).toFixed(2)
     : product.price.toFixed(2);
 
-  const href = `/products/${product.slug || product.id}`;
+  const href = `/${locale}/products/${product.slug || product.id}`;
 
   if (view === "list") {
     return (
@@ -63,7 +70,7 @@ export function ProductCard({ product, view = "grid", className }: ProductCardPr
   return (
     <Link
       href={href}
-      className={`block rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow ${className ?? ""}`}
+      className={`block rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow shadow-sm ${className ?? ""}`}
     >
       <div className="aspect-square bg-gray-100 dark:bg-gray-700 relative">
         {imageUrl ? (
@@ -98,6 +105,11 @@ export function ProductCard({ product, view = "grid", className }: ProductCardPr
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {product.quantity_per_box} per box
         </p>
+        {showCta && (
+          <span className="mt-2 inline-block text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
+            View details →
+          </span>
+        )}
       </div>
     </Link>
   );

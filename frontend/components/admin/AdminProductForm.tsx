@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   createProduct,
@@ -45,6 +45,8 @@ interface AdminProductFormProps {
 
 export function AdminProductForm({ product }: AdminProductFormProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] ?? "en";
   const isEdit = !!product;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -221,14 +223,14 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
         if (filesToUpload.length > 0) {
           await uploadProductImages(product.id, filesToUpload);
         }
-        router.push("/admin/products");
+        router.push(`/${locale}/admin/products`);
         router.refresh();
       } else {
         const created = await createProduct(payload);
         if (filesToUpload.length > 0) {
           await uploadProductImages(created.id, filesToUpload);
         }
-        router.push("/admin/products");
+        router.push(`/${locale}/admin/products`);
         router.refresh();
       }
     } catch (err) {
@@ -609,7 +611,7 @@ export function AdminProductForm({ product }: AdminProductFormProps) {
           {loading ? "Saving…" : isEdit ? "Update" : "Create"}
         </button>
         <Link
-          href="/admin/products"
+          href={`/${locale}/admin/products`}
           className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           Cancel

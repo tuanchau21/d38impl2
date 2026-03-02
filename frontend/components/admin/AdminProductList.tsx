@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   getAdminProducts,
   getAdminCategories,
@@ -15,6 +16,8 @@ function logError(context: string, err: unknown): void {
 }
 
 export function AdminProductList() {
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] ?? "en";
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -190,7 +193,7 @@ export function AdminProductList() {
                   </td>
                   <td className="px-4 py-2">
                     <Link
-                      href={`/admin/products/${p.id}/edit`}
+                      href={`/${locale}/admin/products/${p.id}/edit`}
                       className="text-blue-600 dark:text-blue-400 hover:underline mr-2"
                     >
                       Edit

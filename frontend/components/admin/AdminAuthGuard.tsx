@@ -20,8 +20,9 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const locale = pathname?.split("/")[1] ?? "en";
   useEffect(() => {
-    if (pathname === "/admin/login") {
+    if (pathname?.endsWith("/admin/login")) {
       setLoading(false);
       return;
     }
@@ -34,7 +35,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
       .catch((err) => {
         if (!cancelled) {
           logError("auth check failed", err);
-          const redirect = `/admin/login?redirect=${encodeURIComponent(pathname || "/admin")}`;
+          const redirect = `/${locale}/admin/login?redirect=${encodeURIComponent(pathname || `/${locale}/admin`)}`;
           router.replace(redirect);
         }
       })
@@ -46,7 +47,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
     };
   }, [pathname, router]);
 
-  if (pathname === "/admin/login") {
+  if (pathname?.endsWith("/admin/login")) {
     return <>{children}</>;
   }
   if (loading) {

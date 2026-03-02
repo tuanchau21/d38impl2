@@ -3,7 +3,7 @@ import { getProduct } from "@/lib/api";
 import { AdminProductForm } from "@/components/admin/AdminProductForm";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }
 
 export const dynamic = "force-dynamic";

@@ -1,38 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
+import { availableLocales, type LocaleCode } from "@/lib/i18n";
 
-export function Header() {
+interface HeaderProps {
+  locale: LocaleCode;
+}
+
+export function Header({ locale }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = searchQuery.trim();
     if (q) {
-      router.push(`/catalog?q=${encodeURIComponent(q)}`);
+      router.push(`/${locale}/catalog?q=${encodeURIComponent(q)}`);
     } else {
-      router.push("/catalog");
+      router.push(`/${locale}/catalog`);
     }
+  };
+
+  const switchLocale = (newLocale: LocaleCode) => {
+    if (newLocale === locale) return;
+    const segments = pathname?.split("/").filter(Boolean) ?? [];
+    const rest = segments.slice(1).join("/");
+    const newPath = rest ? `/${newLocale}/${rest}` : `/${newLocale}`;
+    router.push(newPath);
   };
 
   return (
     <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 gap-4">
-        <Link href="/" className="font-semibold text-lg text-gray-900 dark:text-white shrink-0">
+        <Link
+          href={`/${locale}`}
+          className="font-semibold text-lg text-gray-900 dark:text-white shrink-0"
+        >
           Bulk Shoe Shop
         </Link>
         <nav className="flex items-center gap-3 sm:gap-6 flex-1 justify-end flex-wrap">
           <Link
-            href="/catalog"
+            href={`/${locale}/catalog`}
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
           >
             Categories
           </Link>
           <Link
-            href="/promotions"
+            href={`/${locale}/promotions`}
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
           >
             Promotions
@@ -54,18 +71,37 @@ export function Header() {
             </button>
           </form>
           <Link
-            href="/admin"
+            href={`/${locale}/admin`}
             className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
           >
             Admin
           </Link>
-          {/* Placeholders for future: Account, Cart — disabled in v1 (frontend-technical-design §4) */}
+          {/* Placeholders for future: Account, Cart — disabled in v1 */}
           <span className="text-gray-400 dark:text-gray-500 text-sm cursor-not-allowed" title="Coming later">
             Account
           </span>
           <span className="text-gray-400 dark:text-gray-500 text-sm cursor-not-allowed" title="Coming later">
             Cart
           </span>
+          {/* Language selector: separate button per language (from available translation files) */}
+          <div className="flex items-center gap-1" role="group" aria-label="Language">
+            {availableLocales.map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                onClick={() => switchLocale(l.code)}
+                aria-current={l.code === locale ? "true" : undefined}
+                aria-label={`Switch to ${l.label}`}
+                className={`px-2 py-1.5 rounded text-sm ${
+                  l.code === locale
+                    ? "font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent"
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
         </nav>
       </div>
     </header>

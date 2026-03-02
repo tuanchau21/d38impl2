@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getProducts, getCategories } from "@/lib/api";
 import { ProductCard, type ProductCardView } from "@/components/ProductCard";
 import type { Product } from "@/lib/types";
@@ -16,6 +16,7 @@ function logError(context: string, err: unknown): void {
 export function CatalogClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -85,7 +86,7 @@ export function CatalogClient() {
       else params.set(k, str);
     });
     if (!params.has("page")) params.set("page", "1");
-    router.replace(`/catalog?${params.toString()}`, { scroll: false });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {

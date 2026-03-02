@@ -70,7 +70,7 @@ export function HomeProductList() {
     <section className="mb-10">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          Products
+          All products
         </h2>
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm text-gray-600 dark:text-gray-400">View:</span>
@@ -147,7 +147,7 @@ export function HomeProductList() {
               aria-label="Pagination"
             >
               <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">
-                Page {page} of {totalPages}
+                Page <span className="font-medium text-indigo-600 dark:text-indigo-400">{page}</span> of {totalPages}
               </span>
               {hasPrev && (
                 <a

@@ -24,30 +24,32 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const user = useAdminUser();
-  const isDashboard = pathname === "/admin";
+  const locale = pathname?.split("/")[1] ?? "en";
+  const base = `/${locale}/admin`;
+  const isDashboard = pathname === base;
   const isProducts =
-    pathname === "/admin/products" ||
-    pathname.startsWith("/admin/products/new") ||
-    /^\/admin\/products\/\d+\/edit$/.test(pathname);
-  const isCategories = pathname === "/admin/categories";
+    pathname === `${base}/products` ||
+    pathname?.startsWith(`${base}/products/new`) ||
+    new RegExp(`^\\/${locale}\\/admin\\/products\\/\\d+\\/edit$`).test(pathname ?? "");
+  const isCategories = pathname === `${base}/categories`;
 
   const handleLogout = async () => {
     try {
       await logout();
-      router.replace("/admin/login");
+      router.replace(`${base}/login`);
       router.refresh();
     } catch (err) {
       console.error("[AdminSidebar] logout failed", err);
-      router.replace("/admin/login");
+      router.replace(`${base}/login`);
     }
   };
 
   return (
     <aside className="w-56 border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex-shrink-0 flex flex-col">
       <nav className="p-4 space-y-1 flex-1">
-        {navLink("/admin", "Dashboard", isDashboard)}
-        {navLink("/admin/products", "Products", isProducts)}
-        {navLink("/admin/categories", "Categories", isCategories)}
+        {navLink(base, "Dashboard", isDashboard)}
+        {navLink(`${base}/products`, "Products", isProducts)}
+        {navLink(`${base}/categories`, "Categories", isCategories)}
         {/* Placeholders for future: Orders, Users (admin-high-level-design.md §3) */}
         <span className="block px-3 py-2 text-gray-400 dark:text-gray-500 text-sm">
           Orders (later)
